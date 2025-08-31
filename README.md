@@ -43,7 +43,7 @@ SOFTWARE.
 
 */
 
-public class StringReader {
+public class StringReader { /* code removed */ }
 ```
 
 If the notice is not there, you should assume it is licensed under the GPLv3.

@@ -1,4 +1,4 @@
-package dev.infernity.rollplayer.listeners;
+package dev.infernity.rollplayer.listeners.interfaces;
 
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 

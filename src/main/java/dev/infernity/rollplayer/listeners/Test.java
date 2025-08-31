@@ -1,6 +1,6 @@
-package dev.infernity.rollplayer.listeners.impls;
+package dev.infernity.rollplayer.listeners;
 
-import dev.infernity.rollplayer.listeners.SimpleCommandListener;
+import dev.infernity.rollplayer.listeners.templates.SimpleCommandListener;
 import net.dv8tion.jda.api.components.container.Container;
 import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;

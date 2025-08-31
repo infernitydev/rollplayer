@@ -30,7 +30,7 @@ public class Rollplayer extends ListenerAdapter {
 
         Configuration config = builder.getConfiguration();
         String token = config.getString("discord.token");
-        var api = JDABuilder.createDefault(token).addEventListeners(new Rollplayer()).build();
+        JDABuilder.createDefault(token).addEventListeners(new Rollplayer()).build();
     }
 
     @Override

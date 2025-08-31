@@ -2,7 +2,6 @@ package dev.infernity.rollplayer;
 
 import dev.infernity.rollplayer.listeners.CommandDataCapable;
 import dev.infernity.rollplayer.listeners.impls.Test;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 

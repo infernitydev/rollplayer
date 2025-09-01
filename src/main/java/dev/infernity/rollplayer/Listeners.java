@@ -1,5 +1,6 @@
 package dev.infernity.rollplayer;
 
+import dev.infernity.rollplayer.listeners.TestArguments;
 import dev.infernity.rollplayer.listeners.interfaces.CommandDataCapable;
 import dev.infernity.rollplayer.listeners.Test;
 import net.dv8tion.jda.api.hooks.EventListener;
@@ -13,7 +14,7 @@ public class Listeners {
     public ArrayList<SlashCommandData> commands = new ArrayList<>();
 
     public Listeners(){
-        this.listeners = List.of(new Test());
+        this.listeners = List.of(new Test(), new TestArguments());
         for (EventListener listener : listeners) {
             if (listener instanceof CommandDataCapable capable) {
                 commands.addAll(capable.getCommandData());

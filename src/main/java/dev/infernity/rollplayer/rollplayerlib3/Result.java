@@ -23,7 +23,13 @@ public interface Result<T> {
     }
 
 
-    record Success<S>(S value) implements Result<S> {
+    class Success<S> implements Result<S> {
+        protected S value;
+
+        public Success(S value){
+            this.value = value;
+        }
+
         @Override
         public Optional<S> result() {
             return Optional.of(value);
@@ -50,7 +56,13 @@ public interface Result<T> {
         }
     }
 
-    record Error<S>(String message) implements Result<S> {
+    class Error<S> implements Result<S> {
+        protected String message;
+
+        public Error(String message){
+            this.message = message;
+        }
+
         @Override
         public Optional<S> result() {
             return Optional.empty();

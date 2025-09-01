@@ -81,6 +81,10 @@ public class StringReader {
         return this.string.charAt(this.cursor);
     }
 
+    public String peekMultiple(int length) {
+        return this.string.substring(this.cursor, this.cursor+length);
+    }
+
     public char peek(int offset) {
         return this.string.charAt(this.cursor + offset);
     }
@@ -124,6 +128,28 @@ public class StringReader {
             } catch (NumberFormatException var4) {
                 this.cursor = start;
                 throw new SyntaxException("Expected an integer, got '" + number + "'");
+            }
+        }
+    }
+
+    public int readPositiveInt() throws SyntaxException {
+        int start = this.cursor;
+
+        while(this.canRead() && isAllowedNumber(this.peek())) {
+            this.skip();
+        }
+
+        String number = this.string.substring(start, this.cursor);
+        if (number.isEmpty()) {
+            throw new SyntaxException("Expected a positive integer");
+        } else {
+            try {
+                var val = Integer.parseInt(number);
+                if (val <= 0) {throw new SyntaxException("Expected a positive integer, not a negative one or zero");}
+                return val;
+            } catch (NumberFormatException var4) {
+                this.cursor = start;
+                throw new SyntaxException("Expected a positive integer, got '" + number + "'");
             }
         }
     }

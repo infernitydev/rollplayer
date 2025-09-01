@@ -24,10 +24,10 @@ public class Tokenizer {
                 return TokenizationResult.error(token.error().orElseThrow(), token.getSpan());
             }
             lastToken = token.getOrThrow();
-            if(token.getOrThrow() instanceof Token.EndOfString) {
+            if(lastToken instanceof Token.EndOfString) {
                 return TokenizationResult.success(list);
             }
-            list.add(token.getOrThrow());
+            list.add(lastToken);
         }
     }
 

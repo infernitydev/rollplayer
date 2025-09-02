@@ -1,4 +1,4 @@
-package dev.infernity.rollplayer.rollplayerlib3;
+package dev.infernity.rollplayer.rollplayerlib3.tokenizer;
 
 import dev.infernity.rollplayer.rollplayerlib3.exceptions.SyntaxException;
 

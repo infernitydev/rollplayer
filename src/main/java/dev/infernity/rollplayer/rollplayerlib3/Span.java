@@ -1,5 +1,6 @@
 package dev.infernity.rollplayer.rollplayerlib3;
 
+import dev.infernity.rollplayer.rollplayerlib3.tokenizer.StringReader;
 import org.jetbrains.annotations.NotNull;
 
 public record Span(int cursorStart, int cursorEnd, String originalString) {

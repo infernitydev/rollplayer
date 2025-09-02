@@ -1,4 +1,7 @@
-package dev.infernity.rollplayer.rollplayerlib3;
+package dev.infernity.rollplayer.rollplayerlib3.tokenizer;
+
+import dev.infernity.rollplayer.rollplayerlib3.Result;
+import dev.infernity.rollplayer.rollplayerlib3.Span;
 
 import java.util.List;
 import java.util.Optional;

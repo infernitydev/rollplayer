@@ -1,9 +1,9 @@
-package dev.infernity.rollplayer.rollplayerlib3;
+package dev.infernity.rollplayer.rollplayerlib3.tokenizer;
 
+import dev.infernity.rollplayer.rollplayerlib3.Span;
 import dev.infernity.rollplayer.rollplayerlib3.exceptions.SyntaxException;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Supplier;
 
 public class Tokenizer {
@@ -73,6 +73,10 @@ public class Tokenizer {
                 }
                 case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.' ->
                         TokenResult.success(new Token.Number(reader.readDouble(), this.createSpan(start)));
+                case '+' -> token('+', () -> new Token.Plus(this.createSpan(start)));
+                case '-' -> token('-', () -> new Token.Minus(this.createSpan(start)));
+                case '/' -> token('/', () -> new Token.Divide(this.createSpan(start)));
+                case '*' -> token('*', () -> new Token.Multiply(this.createSpan(start)));
                 default -> TokenResult.error("What does '" + reader.peek() + "' mean?", this.createSpan(start));
             };
         }
@@ -87,10 +91,6 @@ public class Tokenizer {
 
     public Span createSpan(int start) {
         return new Span(start, this.reader.getCursor(), this.reader.getString());
-    }
-
-    public Span createSpan(int start, int end) {
-        return new Span(start, end, this.reader.getString());
     }
 
     public TokenResult token(char symbol, Supplier<Token> token) throws SyntaxException {

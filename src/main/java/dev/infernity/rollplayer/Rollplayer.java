@@ -38,6 +38,7 @@ public class Rollplayer extends ListenerAdapter {
         var api = event.getJDA();
         log.info("Rollplayer is initializing!");
         var listeners = new Listeners();
+        log.info("Loading {} listeners.", listeners.listeners.size());
         api.addEventListener(listeners.listeners.toArray());
         Objects.requireNonNull(api.getGuildById(1223799616915636287L)).updateCommands().addCommands(listeners.commands.toArray(new CommandData[0])).queue();
         super.onReady(event);

@@ -321,8 +321,8 @@ public class TicTacToe extends SimpleCommandListener {
 
     public void onCommandRan(@NotNull SlashCommandInteractionEvent event) {
         mapCleanup();
-        int width = event.getOption("width", 3, OptionMapping::getAsInt);
-        int victoryRequirement = event.getOption("victory_requirement", width, OptionMapping::getAsInt);
+        long width = event.getOption("width", 3L, OptionMapping::getAsLong);
+        long victoryRequirement = event.getOption("victory_requirement", width, OptionMapping::getAsLong);
         if (width < 1) {
             event.replyComponents(ErrorTemplate.of("You can't have a 0x0 board!")).useComponentsV2().setEphemeral(true).queue();
             return;
@@ -334,17 +334,22 @@ public class TicTacToe extends SimpleCommandListener {
         }
         if (victoryRequirement > width) {
             event.replyComponents(ErrorTemplate.of("Victory requirement is larger than width!",
-                    String.format("How are you supposed to get a %d in a row with a width of %d?", victoryRequirement, width)))
+                            String.format("How are you supposed to get a %d in a row with a width of %d?", victoryRequirement, width)))
+                    .useComponentsV2().setEphemeral(true).queue();
+            return;
+        }
+        if (victoryRequirement < -2147483000) {
+            event.replyComponents(ErrorTemplate.of("No integer underflow for you >:["))
                     .useComponentsV2().setEphemeral(true).queue();
             return;
         }
         UUID id = UUID.randomUUID();
         event.replyComponents(
-                createContainer(createInitialBoard(id, width, victoryRequirement))
+                createContainer(createInitialBoard(id, (int) width, (int) victoryRequirement))
         ).useComponentsV2().queue(_ ->
             gameStateMap.put(id, new TTTGameState(
-                    width,
-                    victoryRequirement,
+                    (int) width,
+                    (int) victoryRequirement,
                     event.getUser()
             ))
         );

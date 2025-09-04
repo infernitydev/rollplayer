@@ -314,7 +314,7 @@ public class TicTacToe extends SimpleCommandListener {
     public List<CommandData> getCommandData() {
         return List.of(
                 Commands.slash("tictactoe", "Play a game of Tic Tac Toe!")
-                        .addOption(OptionType.INTEGER, "width", "The width of the board (3-5, default 3)", false)
+                        .addOption(OptionType.INTEGER, "width", "The width of the board (1-5, default 3)", false)
                         .addOption(OptionType.INTEGER, "victory_requirement", "The amount in a row required to win (defaults to board size)", false)
         );
     }
@@ -323,6 +323,21 @@ public class TicTacToe extends SimpleCommandListener {
         mapCleanup();
         int width = event.getOption("width", 3, OptionMapping::getAsInt);
         int victoryRequirement = event.getOption("victory_requirement", width, OptionMapping::getAsInt);
+        if (width < 1) {
+            event.replyComponents(ErrorTemplate.of("You can't have a 0x0 board!")).useComponentsV2().setEphemeral(true).queue();
+            return;
+        }
+        if (width > 5) {
+            event.replyComponents(ErrorTemplate.of("You can't have a 6x6 board or larger!",
+                    "Unfortunately, this is due to discord limitations :(")).useComponentsV2().setEphemeral(true).queue();
+            return;
+        }
+        if (victoryRequirement > width) {
+            event.replyComponents(ErrorTemplate.of("Victory requirement is larger than width!",
+                    String.format("How are you supposed to get a %d in a row with a width of %d?", victoryRequirement, width)))
+                    .useComponentsV2().setEphemeral(true).queue();
+            return;
+        }
         UUID id = UUID.randomUUID();
         event.replyComponents(
                 createContainer(createInitialBoard(id, width, victoryRequirement))

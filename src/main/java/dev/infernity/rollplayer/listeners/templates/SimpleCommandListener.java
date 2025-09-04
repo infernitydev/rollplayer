@@ -58,6 +58,14 @@ public abstract class SimpleCommandListener implements EventListener, CommandDat
         throw new RuntimeException("A button was pressed with this listener, but no override was given to onButtonPress! Event ID: " + event.getComponentId());
     }
 
+    public String namespacedId(String identifier) {
+        return commandName + ":" + identifier;
+    }
+
+    public String namespacedId(String identifier, Object... args) {
+        return String.format(commandName + ":" + identifier, args);
+    }
+
     @Override
     public void onEvent(@NotNull GenericEvent genericEvent) {
         if (genericEvent instanceof SlashCommandInteractionEvent event) {

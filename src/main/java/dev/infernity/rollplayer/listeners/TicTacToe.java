@@ -33,6 +33,7 @@ public class TicTacToe extends SimpleCommandListener {
         public GameResult result;
         public GameState state;
         public long expirationTimestamp;
+        private boolean singleplayer;
 
         public TTTGameState(
                 int width,
@@ -52,6 +53,7 @@ public class TicTacToe extends SimpleCommandListener {
             this.result = gameResult;
             this.state = state;
             this.expirationTimestamp = expirationTimestamp;
+            this.singleplayer = false;
         }
 
         public TTTGameState(int width, int victoryRequirement, User user, InteractionHook hook) {
@@ -123,15 +125,9 @@ public class TicTacToe extends SimpleCommandListener {
         }
 
         protected enum TileState {
-            EMPTY(0),
-            X(1),
-            O(-1);
-
-            public final int value;
-
-            TileState(int value) {
-                this.value = value;
-            }
+            EMPTY,
+            X,
+            O;
 
             public Emoji getEmoji(){
                 return switch (this) {
@@ -165,6 +161,7 @@ public class TicTacToe extends SimpleCommandListener {
         public void setPlayerO(@NotNull User player){
             playerO = player;
             state = GameState.X_TURN;
+            singleplayer = player.getIdLong() == playerX.getIdLong();
         }
 
         public TileSetResult trySetTile(int x, int y, User user){
@@ -176,12 +173,21 @@ public class TicTacToe extends SimpleCommandListener {
             }
             TileState tile;
             long id = user.getIdLong();
-            if (id == playerX.getIdLong()){
-                tile = TileState.X;
-            } else if (id == playerO.getIdLong()) {
-                tile = TileState.O;
+            if (singleplayer) {
+                tile = switch (state) {
+                    case WAITING_FOR_PLAYER -> throw new IllegalStateException("Not possible to be a singleplayer game if uninitialized");
+                    case X_TURN -> TileState.X;
+                    case O_TURN -> TileState.O;
+                    case OVER -> throw new IllegalStateException("Already checked if game over above");
+                };
             } else {
-                return TileSetResult.NOT_PLAYING;
+                if (id == playerX.getIdLong()) {
+                    tile = TileState.X;
+                } else if (id == playerO.getIdLong()) {
+                    tile = TileState.O;
+                } else {
+                    return TileSetResult.NOT_PLAYING;
+                }
             }
             if (grid[x][y] != TileState.EMPTY){
                 return TileSetResult.TILE_ALREADY_SET; // This is done after the tile check so that if the user isn't playing we return that instead

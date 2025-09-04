@@ -37,11 +37,19 @@ public abstract class SimpleCommandListener implements EventListener, CommandDat
         return List.of(Commands.slash(commandName, commandDescription));
     }
 
-    public Container createContainer(ContainerChildComponent... components){
-        List<ContainerChildComponent> list = new java.util.ArrayList<>(Arrays.stream(components).toList());
-        list.add(0, TextDisplay.ofFormat("### %s /%s", commandEmoji, commandName));
+    public Container createContainer(TextDisplay title, List<ContainerChildComponent> list){
+        list.add(0, title);
         list.add(1, Separator.createInvisible(Separator.Spacing.SMALL));
         return Container.of(list);
+    }
+
+    public Container createContainer(List<ContainerChildComponent> list){
+        return createContainer(TextDisplay.ofFormat("### %s /%s", commandEmoji, commandName), list);
+    }
+
+    public Container createContainer(ContainerChildComponent... components){
+        List<ContainerChildComponent> list = new java.util.ArrayList<>(Arrays.stream(components).toList());
+        return createContainer(TextDisplay.ofFormat("### %s /%s", commandEmoji, commandName), list);
     }
 
     public abstract void onCommandRan(@NotNull SlashCommandInteractionEvent event);

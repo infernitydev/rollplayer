@@ -3,7 +3,6 @@ package dev.infernity.rollplayer.listeners;
 import dev.infernity.rollplayer.components.templates.ErrorTemplate;
 import dev.infernity.rollplayer.i18n.ListJoiner;
 import dev.infernity.rollplayer.listeners.templates.SimpleCommandListener;
-import net.dv8tion.jda.api.components.container.Container;
 import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -32,7 +31,7 @@ public class Choose extends SimpleCommandListener {
     }
 
     public Choose() {
-        super("choose", "choose desc");
+        super("choose", "choose desc", "<:chooseWheel:1412921325474807878>");
     }
 
     @Override
@@ -74,8 +73,8 @@ public class Choose extends SimpleCommandListener {
             chosen = pickRandom(options, count);
         }
 
-        event.replyComponents(Container.of(
-                TextDisplay.of("<:chooseWheel:1412921325474807878> > " + ListJoiner.joinList(event.getUserLocale(), chosen))
+        event.replyComponents(createContainer(
+                TextDisplay.of(ListJoiner.joinList(event.getUserLocale(), chosen))
         )).useComponentsV2().queue();
     }
 }

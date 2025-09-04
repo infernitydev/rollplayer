@@ -1,8 +1,6 @@
 package dev.infernity.rollplayer.listeners;
 
 import dev.infernity.rollplayer.listeners.templates.SimpleCommandListener;
-import net.dv8tion.jda.api.components.container.Container;
-import net.dv8tion.jda.api.components.separator.Separator;
 import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -37,7 +35,7 @@ public class EightBall extends SimpleCommandListener {
             "Very doubtful"};
 
     public EightBall() {
-        super("8ball", "8ball desc");
+        super("8ball", "8ball desc","\uD83C\uDFB1");
     }
 
     @Override
@@ -55,15 +53,14 @@ public class EightBall extends SimpleCommandListener {
         String response = RESPONSES[randomIndex];
         var question = event.getOption("question");
         if (question == null) {
-            event.replyComponents(Container.of(
-                TextDisplay.of("\uD83C\uDFB1 > " + response)
+            event.replyComponents(createContainer(
+                TextDisplay.of("\uD83C\uDFB1 " + response)
             )).useComponentsV2().queue();
             return;
         }
-        event.replyComponents(Container.of(
+        event.replyComponents(createContainer(
                 TextDisplay.of("**" + question.getAsString() + "**"),
-                Separator.createDivider(Separator.Spacing.SMALL),
-                TextDisplay.of("\uD83C\uDFB1 > " + response)
+                TextDisplay.of(response)
         )).useComponentsV2().queue();
     }
 }

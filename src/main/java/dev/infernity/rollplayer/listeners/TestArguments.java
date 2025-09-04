@@ -1,7 +1,6 @@
 package dev.infernity.rollplayer.listeners;
 
 import dev.infernity.rollplayer.listeners.templates.SimpleCommandListener;
-import net.dv8tion.jda.api.components.container.Container;
 import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -14,7 +13,7 @@ import java.util.Objects;
 
 public class TestArguments extends SimpleCommandListener {
     public TestArguments() {
-        super("testargs", "testargs desc");
+        super("testargs", "testargs desc", "\uD83D\uDD27");
     }
 
     @Override
@@ -27,7 +26,7 @@ public class TestArguments extends SimpleCommandListener {
 
 
     public void onCommandRan(@NotNull SlashCommandInteractionEvent event) {
-        event.replyComponents(Container.of(
+        event.replyComponents(createContainer(
                 TextDisplay.of("Provided argument: '" + Objects.requireNonNull(event.getOption("argument")).getAsString() + "'")
         )).useComponentsV2().queue();
     }

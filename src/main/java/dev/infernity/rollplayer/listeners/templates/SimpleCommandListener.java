@@ -1,6 +1,10 @@
 package dev.infernity.rollplayer.listeners.templates;
 
 import dev.infernity.rollplayer.listeners.interfaces.CommandDataCapable;
+import net.dv8tion.jda.api.components.container.Container;
+import net.dv8tion.jda.api.components.container.ContainerChildComponent;
+import net.dv8tion.jda.api.components.separator.Separator;
+import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -9,6 +13,7 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -20,14 +25,23 @@ import java.util.Objects;
 public abstract class SimpleCommandListener implements EventListener, CommandDataCapable {
     protected final String commandName;
     protected final String commandDescription;
+    protected final String commandEmoji;
 
-    public SimpleCommandListener(String commandName, String commandDescription) {
+    public SimpleCommandListener(String commandName, String commandDescription, String commandEmoji) {
         this.commandName = commandName;
         this.commandDescription = commandDescription;
+        this.commandEmoji = commandEmoji;
     }
 
     public List<CommandData> getCommandData(){
         return List.of(Commands.slash(commandName, commandDescription));
+    }
+
+    public Container createContainer(ContainerChildComponent... components){
+        List<ContainerChildComponent> list = new java.util.ArrayList<>(Arrays.stream(components).toList());
+        list.add(0, TextDisplay.ofFormat("### %s /%s", commandEmoji, commandName));
+        list.add(1, Separator.createInvisible(Separator.Spacing.SMALL));
+        return Container.of(list);
     }
 
     public abstract void onCommandRan(@NotNull SlashCommandInteractionEvent event);

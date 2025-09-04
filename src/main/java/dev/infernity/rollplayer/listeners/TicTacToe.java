@@ -34,7 +34,7 @@ public class TicTacToe extends SimpleCommandListener {
         public long expirationTimestamp;
         private boolean singleplayer;
 
-        public TTTGameState(
+        TTTGameState(
                 int width,
                 int victoryRequirement,
                 TileState[][] grid,
@@ -55,7 +55,7 @@ public class TicTacToe extends SimpleCommandListener {
             this.singleplayer = false;
         }
 
-        public TTTGameState(int width, int victoryRequirement, User user) {
+        TTTGameState(int width, int victoryRequirement, User user) {
             this(width, victoryRequirement, initializeEmpty(width), user, null, GameResult.INCOMPLETE, GameState.WAITING_FOR_PLAYER, Instant.now().getEpochSecond() + 900);
         }
 

@@ -5,8 +5,8 @@ import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -26,7 +26,7 @@ public abstract class SimpleCommandListener implements EventListener, CommandDat
         this.commandDescription = commandDescription;
     }
 
-    public List<SlashCommandData> getCommandData(){
+    public List<CommandData> getCommandData(){
         return List.of(Commands.slash(commandName, commandDescription));
     }
 

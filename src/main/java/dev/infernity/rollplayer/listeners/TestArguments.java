@@ -5,8 +5,8 @@ import net.dv8tion.jda.api.components.container.Container;
 import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -18,7 +18,7 @@ public class TestArguments extends SimpleCommandListener {
     }
 
     @Override
-    public List<SlashCommandData> getCommandData(){
+    public List<CommandData> getCommandData(){
         return List.of(
                 Commands.slash(commandName, commandDescription)
                         .addOption(OptionType.STRING, "argument", "argument desc")

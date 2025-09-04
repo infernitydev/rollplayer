@@ -8,8 +8,8 @@ import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -36,7 +36,7 @@ public class Choose extends SimpleCommandListener {
     }
 
     @Override
-    public List<SlashCommandData> getCommandData(){
+    public List<CommandData> getCommandData(){
         return List.of(
                 Commands.slash(commandName, commandDescription)
                         .addOption(OptionType.STRING, "options", "A list of options, split by a semicolon (;)", true)
@@ -59,6 +59,7 @@ public class Choose extends SimpleCommandListener {
         }
 
         boolean unique = event.getOption("unique", true, OptionMapping::getAsBoolean);
+        List<String> chosen;
 
         if (unique) {
             if (count > options.size()) {
@@ -68,15 +69,13 @@ public class Choose extends SimpleCommandListener {
                         )).useComponentsV2().queue();
                 return;
             }
-            List<String> chosen = pickRandomUnique(options, count);
-            event.replyComponents(Container.of(
-                    TextDisplay.of(ListJoiner.joinList(event.getUserLocale(), chosen))
-            )).useComponentsV2().queue();
+            chosen = pickRandomUnique(options, count);
         } else {
-            List<String> chosen = pickRandom(options, count);
-            event.replyComponents(Container.of(
-                    TextDisplay.of(ListJoiner.joinList(event.getUserLocale(), chosen))
-            )).useComponentsV2().queue();
+            chosen = pickRandom(options, count);
         }
+
+        event.replyComponents(Container.of(
+                TextDisplay.of("<:chooseWheel:1412921325474807878> > " + ListJoiner.joinList(event.getUserLocale(), chosen))
+        )).useComponentsV2().queue();
     }
 }

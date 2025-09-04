@@ -6,8 +6,8 @@ import net.dv8tion.jda.api.components.separator.Separator;
 import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -41,7 +41,7 @@ public class EightBall extends SimpleCommandListener {
     }
 
     @Override
-    public List<SlashCommandData> getCommandData(){
+    public List<CommandData> getCommandData(){
         return List.of(
                 Commands.slash(commandName, commandDescription)
                         .addOption(OptionType.STRING, "question", "question desc", false)

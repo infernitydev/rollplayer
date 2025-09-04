@@ -14,12 +14,12 @@ public class ErrorTemplate {
     public static Container of(String error, String details){
         if (error == null) {error = "An error occured!";}
         if (details == null) {
-            return Container.of(TextDisplay.of("### " + error)).withAccentColor(Color.RED);
+            return Container.of(TextDisplay.of("### <:error:1413000022449979392> " + error)).withAccentColor(14495300);
         }
         return Container.of(
-                TextDisplay.of("### " + error),
-                Separator.createDivider(Separator.Spacing.SMALL),
+                TextDisplay.of("### <:error:1413000022449979392> " + error),
+                Separator.createInvisible(Separator.Spacing.SMALL),
                 TextDisplay.of(details)
-        ).withAccentColor(Color.RED);
+        ).withAccentColor(14495300); // This is the same color as the X character (DD2E44)
     }
 }

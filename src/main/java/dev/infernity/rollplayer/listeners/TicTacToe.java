@@ -11,7 +11,6 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -56,8 +55,8 @@ public class TicTacToe extends SimpleCommandListener {
             this.singleplayer = false;
         }
 
-        public TTTGameState(int width, int victoryRequirement, User user, InteractionHook hook) {
-            this(width, victoryRequirement, initializeEmpty(width), user, null, GameResult.INCOMPLETE, GameState.WAITING_FOR_PLAYER, hook.getExpirationTimestamp());
+        public TTTGameState(int width, int victoryRequirement, User user) {
+            this(width, victoryRequirement, initializeEmpty(width), user, null, GameResult.INCOMPLETE, GameState.WAITING_FOR_PLAYER, Instant.now().getEpochSecond() + 900);
         }
 
         public static TileState[][] initializeEmpty(int width){
@@ -68,7 +67,7 @@ public class TicTacToe extends SimpleCommandListener {
             return tiles;
         }
 
-        public Container getBoard() {
+        public Container getBoard(UUID id) {
             assert playerO != null;
             String topbar;
             if (playerX.getIdLong() == playerO.getIdLong()) {
@@ -78,11 +77,11 @@ public class TicTacToe extends SimpleCommandListener {
             }
             return createContainer(
                     TextDisplay.of(topbar),
-                    getBoardInner()
+                    getBoardInner(id)
             );
         }
 
-        private List<ContainerChildComponent> getBoardInner(){
+        private List<ContainerChildComponent> getBoardInner(UUID id){
             List<ContainerChildComponent> list = new ArrayList<>();
             list.add(getTypeString(width, victoryRequirement));
             list.add(getStateString());
@@ -91,7 +90,7 @@ public class TicTacToe extends SimpleCommandListener {
                 for (int j = 0; j < width; j++) {
                     row.add(
                             Button.secondary(
-                                    namespacedId("tile:%d:%d", i, j),
+                                    namespacedId("%s:tile:%d:%d", id.toString(), i, j),
                                     grid[i][j].getEmoji()
                             ).withDisabled(grid[i][j] != TileState.EMPTY || state == GameState.OVER)
                     );
@@ -301,10 +300,10 @@ public class TicTacToe extends SimpleCommandListener {
             }
         }
     }
-    private final Map<Long, TTTGameState> gameStateMap = new HashMap<>();
+    private final Map<UUID, TTTGameState> gameStateMap = new HashMap<>();
 
     public void mapCleanup(){
-        gameStateMap.entrySet().removeIf(entry -> entry.getValue().expirationTimestamp < Instant.now().getEpochSecond() * 1000L);
+        gameStateMap.entrySet().removeIf(entry -> entry.getValue().expirationTimestamp < Instant.now().getEpochSecond());
     }
 
     public TicTacToe() {
@@ -324,14 +323,14 @@ public class TicTacToe extends SimpleCommandListener {
         mapCleanup();
         int width = event.getOption("width", 3, OptionMapping::getAsInt);
         int victoryRequirement = event.getOption("victory_requirement", width, OptionMapping::getAsInt);
+        UUID id = UUID.randomUUID();
         event.replyComponents(
-                createContainer(createInitialBoard(width, victoryRequirement))
-        ).useComponentsV2().queue(hook ->
-            gameStateMap.put(hook.getIdLong(), new TTTGameState(
+                createContainer(createInitialBoard(id, width, victoryRequirement))
+        ).useComponentsV2().queue(_ ->
+            gameStateMap.put(id, new TTTGameState(
                     width,
                     victoryRequirement,
-                    event.getUser(),
-                    hook
+                    event.getUser()
             ))
         );
     }
@@ -339,19 +338,24 @@ public class TicTacToe extends SimpleCommandListener {
     @Override
     public void onButtonPress(@NotNull ButtonInteractionEvent event) {
         String[] split = event.getComponentId().split(":");
-        var state = gameStateMap.get(event.getHook().getIdLong());
-        if (Objects.equals(split[1], "joinGame")) {
+        UUID id = UUID.fromString(split[1]);
+        var state = gameStateMap.get(id);
+        if (state == null){
+            event.replyComponents(ErrorTemplate.of("This game has expired.")).useComponentsV2().setEphemeral(true).queue();
+            return;
+        }
+        if (Objects.equals(split[2], "joinGame")) {
             state.setPlayerO(event.getUser());
-            event.editComponents(state.getBoard()).useComponentsV2().queue();
-        } else if (Objects.equals(split[1], "tile")) {
+            event.editComponents(state.getBoard(id)).useComponentsV2().queue();
+        } else if (Objects.equals(split[2], "tile")) {
             TTTGameState.TileSetResult result = state.trySetTile(
-                    Integer.parseInt(split[2]),
                     Integer.parseInt(split[3]),
+                    Integer.parseInt(split[4]),
                     event.getUser()
             );
             switch (result) {
                 case SUCCESS ->
-                        event.editComponents(state.getBoard()).useComponentsV2().queue();
+                        event.editComponents(state.getBoard(id)).useComponentsV2().queue();
                 case GAME_NOT_STARTED ->
                         event.replyComponents(ErrorTemplate.of("This game hasn't started yet!", "Press the Join Game button to join.")).useComponentsV2().setEphemeral(true).queue();
                 case TILE_ALREADY_SET ->
@@ -366,7 +370,7 @@ public class TicTacToe extends SimpleCommandListener {
         }
     }
 
-    private List<ContainerChildComponent> createInitialBoard(int width, int victoryRequirement){
+    private List<ContainerChildComponent> createInitialBoard(UUID id, int width, int victoryRequirement){
         List<ContainerChildComponent> list = new ArrayList<>();
         list.add(TTTGameState.getTypeString(width, victoryRequirement));
         list.add(TextDisplay.of("Waiting for another player..."));
@@ -376,14 +380,14 @@ public class TicTacToe extends SimpleCommandListener {
             for (int j = 0; j < width; j++) {
                 row.add(
                         Button.secondary(
-                                namespacedId("tile:%d:%d", i, j),
+                                namespacedId("%s:tile:%d:%d", id.toString(), i, j),
                                 TTTGameState.TileState.EMPTY.getEmoji()
                         )
                 );
             }
             list.add(ActionRow.of(row));
         }
-        list.add(ActionRow.of(Button.success(namespacedId("joinGame"), "Join the game!")));
+        list.add(ActionRow.of(Button.success(namespacedId("%s:joinGame", id.toString()), "Join the game!")));
         return list;
     }
 }

@@ -29,6 +29,11 @@
             <artifactId>commons-beanutils</artifactId>
             <version>1.9.4</version>
         </dependency>
+        <dependency>
+            <groupId>org.rekex</groupId>
+            <artifactId>rekex-parser</artifactId>
+            <version>1.2.0</version>
+        </dependency>
     </dependencies>
 
     <properties>

@@ -12,35 +12,24 @@ import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
 public class Rollplayer extends ListenerAdapter {
-    private static final Logger log = LoggerFactory.getLogger(Rollplayer.class);
-
     public static void main(String[] args) throws ConfigurationException {
-        var pather = new JarPather<Rollplayer>();
-        Parameters params = new Parameters();
-        FileBasedConfigurationBuilder<FileBasedConfiguration> builder =
-                new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class).configure(params.properties()
-                        .setBasePath(pather.getFolderWithJarFile(Rollplayer.class))
-                        .setFileName("rollplayer.properties"));
-
-        Configuration config = builder.getConfiguration();
-        String token = config.getString("discord.token");
+        String token = Resources.INSTANCE.getConfig().getString("discord.token");
         JDABuilder.createDefault(token).addEventListeners(new Rollplayer()).build();
     }
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
         var api = event.getJDA();
-        log.info("Rollplayer is initializing!");
+        Resources.INSTANCE.getLogger().info("Rollplayer is initializing!");
         var listeners = new Listeners();
-        log.info("Loading {} listeners.", listeners.listeners.size());
+        Resources.INSTANCE.getLogger().info("Loading {} listeners.", listeners.listeners.size());
         api.addEventListener(listeners.listeners.toArray());
         Objects.requireNonNull(api.getGuildById(1223799616915636287L)).updateCommands().addCommands(listeners.commands.toArray(new CommandData[0])).queue();
         super.onReady(event);
+        Resources.INSTANCE.getLogger().info("Readied up!");
     }
 }

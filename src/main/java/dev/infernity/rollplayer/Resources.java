@@ -23,7 +23,7 @@ public enum Resources {
     private final String version;
     private final String name;
 
-    private Resources() {
+    Resources() {
         this.logger = LoggerFactory.getLogger("Rollplayer");
 
         var pather = new JarPather<Resources>();

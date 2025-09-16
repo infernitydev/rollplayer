@@ -1,22 +1,15 @@
 package dev.infernity.rollplayer;
 
-import dev.infernity.rollplayer.files.JarPather;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.FileBasedConfiguration;
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Parameters;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
 public class Rollplayer extends ListenerAdapter {
-    public static void main(String[] args) throws ConfigurationException {
+    public static void main(String[] args) {
         String token = Resources.INSTANCE.getConfig().getString("discord.token");
         JDABuilder.createDefault(token).addEventListeners(new Rollplayer()).build();
     }

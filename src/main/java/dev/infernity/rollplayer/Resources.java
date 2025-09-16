@@ -22,6 +22,7 @@ public enum Resources {
     private final FileBasedConfiguration config;
     private final String version;
     private final String name;
+    private final String timestamp;
 
     Resources() {
         this.logger = LoggerFactory.getLogger("Rollplayer");
@@ -37,19 +38,22 @@ public enum Resources {
         } catch (ConfigurationException e) {
             throw new ExceptionInInitializerError("The configuration file (rollplayer.properties) was not found.");
         }
-        String _version, _name;
+        String _version, _name, _timestamp;
         try (InputStream stream = getClass().getResourceAsStream("/application-details.properties")) {
             Objects.requireNonNull(stream);
             Properties props = new Properties();
             props.load(stream);
             _version = initializeVersion(props);
             _name = initializeName(props);
+            _timestamp = initializeTimestamp(props);
         } catch (IOException | NullPointerException e) {
             _version = "(unknown version)";
             _name = "(unknown name)";
+            _timestamp = "(unknown timestamp)";
         }
         version = _version;
         name = _name;
+        timestamp = _timestamp;
     }
 
     private String initializeVersion(Properties properties) throws IOException {
@@ -68,6 +72,14 @@ public enum Resources {
         return (String) name;
     }
 
+    private String initializeTimestamp(Properties properties) throws IOException {
+        var timestamp = properties.get("application.buildtime");
+        if (timestamp == null) {
+            return "(unknown timestamp)";
+        }
+        return (String) timestamp;
+    }
+
     public Logger getLogger() {
         return logger;
     }
@@ -82,5 +94,9 @@ public enum Resources {
 
     public String getName() {
         return name;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
     }
 }

@@ -13,7 +13,7 @@ public class Listeners {
     public ArrayList<CommandData> commands = new ArrayList<>();
 
     public Listeners(){
-        this.listeners = List.of(new Test(), new TestArguments(), new EightBall(), new Choose(), new TicTacToe());
+        this.listeners = List.of(new Test(), new TestArguments(), new EightBall(), new Choose(), new TicTacToe(), new Info());
         for (EventListener listener : listeners) {
             if (listener instanceof CommandDataCapable capable) {
                 commands.addAll(capable.getCommandData());

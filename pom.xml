@@ -4,9 +4,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <name>Rollplayer</name>
+
     <groupId>dev.infernity.rollplayer</groupId>
     <artifactId>Rollplayer</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
@@ -81,5 +83,20 @@
                 </configuration>
             </plugin>
         </plugins>
+        <resources>
+            <resource> <!-- Special override for application-details.properties, so we can get the project version-->
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>
+                        application-details.properties
+                    </include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
     </build>
 </project>

@@ -24,7 +24,7 @@ public class Rollplayer extends ListenerAdapter {
     @Override
     public void onReady(@NotNull ReadyEvent event) {
         var api = event.getJDA();
-        Resources.INSTANCE.getLogger().info("Rollplayer is initializing!");
+        Resources.INSTANCE.getLogger().info("{} {} is initializing!", Resources.INSTANCE.getName(), Resources.INSTANCE.getVersion());
         var listeners = new Listeners();
         Resources.INSTANCE.getLogger().info("Loading {} listeners.", listeners.listeners.size());
         api.addEventListener(listeners.listeners.toArray());

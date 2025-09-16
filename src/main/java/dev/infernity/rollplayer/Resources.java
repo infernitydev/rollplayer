@@ -9,12 +9,19 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Objects;
+import java.util.Properties;
+
 /// A immutable list of Singletons.
 public enum Resources {
     INSTANCE;
 
     private final Logger logger;
     private final FileBasedConfiguration config;
+    private final String version;
+    private final String name;
 
     private Resources() {
         this.logger = LoggerFactory.getLogger("Rollplayer");
@@ -30,6 +37,35 @@ public enum Resources {
         } catch (ConfigurationException e) {
             throw new ExceptionInInitializerError("The configuration file (rollplayer.properties) was not found.");
         }
+        String _version, _name;
+        try (InputStream stream = getClass().getResourceAsStream("/application-details.properties")) {
+            Objects.requireNonNull(stream);
+            Properties props = new Properties();
+            props.load(stream);
+            _version = initializeVersion(props);
+            _name = initializeName(props);
+        } catch (IOException | NullPointerException e) {
+            _version = "(unknown version)";
+            _name = "(unknown name)";
+        }
+        version = _version;
+        name = _name;
+    }
+
+    private String initializeVersion(Properties properties) throws IOException {
+        var version = properties.get("application.version");
+        if (version == null) {
+            return "(unknown version)";
+        }
+        return (String) version;
+    }
+
+    private String initializeName(Properties properties) throws IOException {
+        var name = properties.get("application.name");
+        if (name == null) {
+            return "(unknown name)";
+        }
+        return (String) name;
     }
 
     public Logger getLogger() {
@@ -38,5 +74,13 @@ public enum Resources {
 
     public FileBasedConfiguration getConfig() {
         return config;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public String getName() {
+        return name;
     }
 }

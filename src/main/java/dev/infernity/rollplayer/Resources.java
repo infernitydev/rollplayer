@@ -1,5 +1,6 @@
 package dev.infernity.rollplayer;
 
+import dev.infernity.rollplayer.database.UserSettingManager;
 import dev.infernity.rollplayer.files.JarPather;
 import org.apache.commons.configuration2.FileBasedConfiguration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
@@ -14,11 +15,12 @@ import java.io.InputStream;
 import java.util.Objects;
 import java.util.Properties;
 
-/// A immutable list of Singletons.
+/// An immutable list of Singletons.
 public enum Resources {
     INSTANCE;
 
     private final Logger logger;
+    private final UserSettingManager userSettingManager;
     private final FileBasedConfiguration config;
     private final String version;
     private final String name;
@@ -26,6 +28,8 @@ public enum Resources {
 
     Resources() {
         this.logger = LoggerFactory.getLogger("Rollplayer");
+
+        this.userSettingManager = new UserSettingManager();
 
         var pather = new JarPather<Resources>();
         Parameters params = new Parameters();
@@ -82,6 +86,10 @@ public enum Resources {
 
     public Logger getLogger() {
         return logger;
+    }
+
+    public UserSettingManager getUserSettingManager() {
+        return userSettingManager;
     }
 
     public FileBasedConfiguration getConfig() {

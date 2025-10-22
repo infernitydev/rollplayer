@@ -1,3 +1,5 @@
+package dev.infernity.rollplayer.rollplayerlib3;
+
 import java.util.ArrayList;
 
 public class Parser {
@@ -15,7 +17,7 @@ public class Parser {
         ArrayList<String> output = new ArrayList<>();
         for(ArrayList<String> expression : inputExpressions) {
             //if the input expression was just a dice roll, preface with "r " and have the numbers separated by spaces
-            if (expression.getFirst().equals("Dice Roll Expression")) {
+            if (expression.getFirst().equals("Dice Roll dev.infernity.rollplayer.rollplayerlib3.Expression")) {
                 StringBuilder rolls = new StringBuilder("r");
                 expression.removeFirst();
                 for(String s : expression)
@@ -239,7 +241,7 @@ public class Parser {
      * Evaluates all dice rolls in given input token list to prepare for final math pass
      * @param input Tokenized expression to evaluate rolls within
      * @return Token expression able to be passed into the math solver with all "d" dice rolls resolved
-     * <br>If the expression only contained a dice roll expression and no math, it returns all of the rolls as tokens in a list headed by a "Dice Roll Expression" metatoken
+     * <br>If the expression only contained a dice roll expression and no math, it returns all of the rolls as tokens in a list headed by a "Dice Roll dev.infernity.rollplayer.rollplayerlib3.Expression" metatoken
      */
     public static ArrayList<String> evaluateDice(ArrayList<String> input) throws IllegalArgumentException{
         //dummy return
@@ -350,7 +352,7 @@ public class Parser {
             // if the expression was just a dice roll with no math, return it in a special way and head it with a metatoken
             if (firstPass && expressionEnd >= input.size()-1) {
                 output.clear();
-                output.add("Dice Roll Expression");
+                output.add("Dice Roll dev.infernity.rollplayer.rollplayerlib3.Expression");
                 for(double roll : evaluation.getRolls())
                     output.add("" + roll);
                 return output;

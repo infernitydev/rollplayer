@@ -1,3 +1,5 @@
+package dev.infernity.rollplayer.rollplayerlib3;
+
 import java.util.ArrayList;
 
 public class MathSolver extends Expression {

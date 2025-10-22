@@ -1,0 +1,453 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
+
+public class Expression {
+    ArrayList<String> tokenStream;
+    int pointer;
+
+    public Expression (ArrayList<String> tokens) {
+        tokenStream = new ArrayList<>();
+        tokenStream.addAll(tokens);
+        pointer = 0;
+        tokenStream.add("EOF"); // just exists to avoid StringOutOfBoundsException throws when peeking
+    }
+
+    protected String peek() {
+        return tokenStream.get(pointer);
+    }
+    protected boolean peek(String s) {
+        return peek().equals(s);
+    }
+    protected String consume(){
+        String output = peek();
+        pointer++;
+        return output;
+    }
+    protected void consume(String s) throws IllegalArgumentException {
+        if(peek(s)) consume();
+        else throw new IllegalArgumentException("Expected "+s+", got "+peek());
+    }
+    protected boolean isNumber(String s) {
+        return s.matches("\\d+.\\d+");
+    }
+
+    /**
+     * Standard conditional tester for modularity
+     * @param testValue Value to be tested, takes double or int
+     * @param conditions Must be fed as (operator)(number) separated by commas. Valid operators are <, <=, >, >=, !=, and =
+     * @return Boolean result of test against conditions
+     * @throws IllegalArgumentException For unrecognized operator character
+     */
+    protected static boolean satisfiesConditions(double testValue, String conditions) throws IllegalArgumentException {
+        String[] conditionArray = conditions.split(",");
+
+        for(String cond : conditionArray) {
+            double conditionValue;
+            switch(cond.charAt(0)) {
+                case '>':
+                    if(cond.charAt(1) == '=') {
+                        conditionValue = Double.parseDouble(cond.substring(2));
+                        if(testValue >= conditionValue) {
+                            return true;
+                        } else continue;
+                    } else {
+                        conditionValue = Double.parseDouble(cond.substring(1));
+                        if(testValue > conditionValue) {
+                            return true;
+                        } else continue;
+                    }
+
+                case '<':
+                    if(cond.charAt(1) == '=') {
+                        conditionValue = Double.parseDouble(cond.substring(2));
+                        if(testValue <= conditionValue) {
+                            return true;
+                        } else continue;
+                    } else {
+                        conditionValue = Double.parseDouble(cond.substring(1));
+                        if(testValue < conditionValue) {
+                            return true;
+                        } else continue;
+                    }
+
+                case '!':
+                    if(cond.charAt(1) != '=') throw new IllegalArgumentException("Illegal condition: !");
+                    conditionValue = Double.parseDouble(cond.substring(2));
+                    if(testValue != conditionValue) {
+                        return true;
+                    } else continue;
+
+                case '=':
+                    conditionValue = Double.parseDouble(cond.substring(1));
+                    if(testValue == conditionValue) {
+                        return true;
+                    } else continue;
+
+                default:
+                    throw new IllegalArgumentException("Illegal condition: " + cond.charAt(0));
+            }
+        }
+        return false;
+    }
+
+}
+
+class DiceRoller extends Expression{
+
+    public DiceRoller (ArrayList<String> tokens) {
+        super(tokens);
+        pointer++;
+        tokenStream.addFirst("BOF");
+    }
+
+    @Override
+    protected boolean peek(String s){
+        return peek().matches(s);
+    }
+    private String getConditions(){
+        StringBuilder output = new StringBuilder();
+        consume("\\{");
+        while(!peek("\\}") && !peek("EOF")){
+            output.append(consume());
+        }
+        consume("\\}");
+        return output.toString();
+    }
+
+    /**
+     * Evaluates a token list for dice rolling from left to right
+     * @return Rolls object containing result rolls
+     * @throws IllegalArgumentException Missing condition throws
+     */
+    public Rolls evaluateExpression() throws IllegalArgumentException {
+        Rolls rolls;
+
+        // establish initial roll
+        {
+            int rollCount = 1, rollMax, rollMin = 1;
+            if (peek("d")) { //d(num)
+                consume();
+            } else if (isNumber(peek())) { //(num)d(num)
+                rollCount = (int)Double.parseDouble(consume());
+                consume("d");
+            } else
+                throw new IllegalArgumentException("No roll detected in passed dice roll expression: " + tokenStream);
+            rollMax = (int)Double.parseDouble(consume());
+            if(peek(":")) { //d(num):(num)
+                consume();
+                rollMin = rollMax;
+                rollMax = (int)Double.parseDouble(consume());
+            }
+            rolls = new Rolls(rollCount, rollMin, rollMax);
+        }
+
+        // -2 in condition is needed to account for EOF tickers at the end
+        while(pointer < tokenStream.size()-2) {
+            switch(consume()) {
+                case "kh":
+                    int keepHigher = 1;
+                    if(isNumber(peek()))
+                        keepHigher = (int)Double.parseDouble(consume());
+
+                    if(peek("kl")) {
+                        consume();
+                        if (isNumber(peek()))
+                            rolls.keepHighLow(keepHigher, (int) Double.parseDouble(consume()));
+                        else
+                            rolls.keepHighLow(keepHigher, 1);
+                    } else
+                        rolls.keepHigher(keepHigher);
+                    break;
+
+                case "kl":
+                    int keepLower = 1;
+                    if(isNumber(peek()))
+                        keepLower = (int)Double.parseDouble(consume());
+
+                    if(peek("kh")) {
+                        consume();
+                        if(isNumber(peek()))
+                            rolls.keepHighLow((int)Double.parseDouble(consume()), keepLower);
+                        else
+                            rolls.keepHighLow(1, keepLower);
+                    } else
+                        rolls.keepLower(keepLower);
+                    break;
+
+                case "rr":
+                    String rerollCond;
+                    int rerollMax = 1;
+                    if(peek("\\{")) rerollCond = getConditions();
+                    else throw new IllegalArgumentException("Missing condition following reroll operator");
+                    if(peek(":")) {
+                        consume(":");
+                        rerollMax = (int)Double.parseDouble(consume());
+                    }
+                    rolls.reroll(rerollCond, rerollMax);
+                    break;
+
+                case "drop":
+                    if(peek("\\{")) {
+                        rolls.drop(getConditions());
+                    } else throw new IllegalArgumentException("Missing condition following drop operator");
+                    break;
+
+                case "!":
+                    String explosionCond = "";
+                    int explosionMax = 10;
+                    if(peek("\\{")) explosionCond = getConditions();
+                    if(peek(":")) {
+                        consume(":");
+                        explosionMax = (int)Double.parseDouble(consume());
+                    }
+                    if(!explosionCond.isEmpty()) rolls.explode(explosionCond, explosionMax);
+                    else rolls.explode(explosionMax);
+                    break;
+
+                case "i":
+                    ArrayList<String> conditions = new ArrayList<>();
+                    ArrayList<String> mathTokens = new ArrayList<>();
+                    conditions.add(consume());
+                    while(peek(",")) {
+                        consume();
+                        if(peek("\\*") || isNumber(peek())) {
+                            conditions.add(consume());
+                        } else throw new IllegalArgumentException("Unrecognized condition in imod: " + peek());
+                    }
+                    while(peek(":")) {
+                        consume();
+                        mathTokens.clear();
+                        boolean endMath = false;
+                        String[] expressionEnds = {"d", "kh", "kl", "rr", "drop", "!", "i", ":", "EOF"};
+                        while (!endMath) {
+                            mathTokens.add(consume());
+                            for (String end : expressionEnds)
+                                if (peek(end))
+                                    endMath = true;
+                        }
+                        rolls.imod(conditions, mathTokens);
+                    }
+                    break;
+            }
+        }
+        return rolls;
+    }
+
+
+}
+
+class Rolls{
+    private double[] rolls;
+    private final int minRoll;
+    private final int maxRoll;
+    private final static Random rng = new Random();
+
+    Rolls(double[] rolls, int min, int max) {
+        this.rolls = rolls;
+        this.minRoll = min;
+        this.maxRoll = max;
+    }
+
+    Rolls(double[] rolls, int die) {
+        this(rolls, 1, die);
+    }
+
+    Rolls(int rollCount, int min, int max) {
+        this(new double[rollCount], min, max);
+        for (int i = 0; i < rollCount; i++) {
+            rolls[i] = rollNumber();
+        }
+    }
+
+    Rolls(int rollCount, int die) {
+        this(new double[rollCount], 1, die);
+        for (int i = 0; i < rollCount; i++) {
+            rolls[i] = rollNumber();
+        }
+    }
+
+    public double rollNumber() {
+        /*example roll logic
+        * 50 to 100
+        * 100-50 = 50
+        * max roll 49 + 50 + 1 = 100
+        * min roll 0 + 50 = 50
+        */
+        return rng.nextInt(maxRoll - minRoll + 1) + minRoll;
+    }
+
+    public double[] getRolls(){
+        return rolls;
+    }
+
+    public double getSum() {
+        double output = 0;
+        for(double i : rolls)
+            output += i;
+        return output;
+    }
+
+    public void keepHigher(int high) {
+        ArrayList<Double> sortedRolls = new ArrayList<>();
+        for (double d : rolls) sortedRolls.add(d);
+        sortedRolls.sort(null);
+        ArrayList<Double> output = new ArrayList<>(Collections.nCopies(rolls.length, null));
+
+        for (int highest = 0; highest < high; highest++) {
+            double highValue = sortedRolls.get(sortedRolls.size() - highest - 1);
+            for (int index = 0; index < rolls.length; index++)
+                if (rolls[index] == highValue && output.get(index) == null) {
+                    output.set(index, highValue);
+                    break;
+                }
+        }
+
+        output.removeAll(Collections.singleton(null));
+        rolls = output.stream().mapToDouble(d -> d).toArray();
+    }
+
+    public void keepLower(int low) {
+        ArrayList<Double> sortedRolls = new ArrayList<>();
+        for (double d : rolls) sortedRolls.add(d);
+        sortedRolls.sort(null);
+        ArrayList<Double> output = new ArrayList<>(Collections.nCopies(rolls.length, null));
+
+        for (int lower = 0; lower < low; lower++) {
+            double lowValue = sortedRolls.get(lower);
+            for (int index = 0; index < rolls.length; index++)
+                if (rolls[index] == lowValue && output.get(index) == null) {
+                    output.set(index, lowValue);
+                    break;
+                }
+        }
+
+        output.removeAll(Collections.singleton(null));
+        rolls = output.stream().mapToDouble(d -> d).toArray();
+    }
+
+    public void keepHighLow(int high, int low) {
+        ArrayList<Double> sortedRolls = new ArrayList<>();
+        for (double d : rolls) sortedRolls.add(d);
+        sortedRolls.sort(null);
+        ArrayList<Double> output = new ArrayList<>(Collections.nCopies(rolls.length, null));
+
+        for (int highest = 0; highest < high; highest++) {
+            double highValue = sortedRolls.get(sortedRolls.size() - highest - 1);
+            for (int index = 0; index < rolls.length; index++)
+                if (rolls[index] == highValue && output.get(index) == null) {
+                    output.set(index, highValue);
+                    break;
+                }
+        }
+
+        for (int lower = 0; lower < low; lower++) {
+            double lowValue = sortedRolls.get(lower);
+            for (int index = 0; index < rolls.length; index++)
+                if (rolls[index] == lowValue && output.get(index) == null) {
+                    output.set(index, lowValue);
+                    break;
+                }
+        }
+
+        output.removeAll(Collections.singleton(null));
+        rolls = output.stream().mapToDouble(d -> d).toArray();
+    }
+
+    /**
+     * Rerolls dice that fulfill given conditions once
+     * @param conditions Must be fed as (operator)(number) separated by commas. Valid operators are <, <=, >, >=, !=, and =
+     */
+    public void reroll(String conditions) {
+        reroll(conditions, 1);
+    }
+
+    /**
+     * Rerolls dice that fulfill given conditions up to maxRepeats times
+     * @param conditions Must be fed as (operator)(number) separated by commas. Valid operators are <, <=, >, >=, !=, and =
+     * @param maxRepeats Maximum number of times a die can be rerolled
+     */
+    public void reroll(String conditions, int maxRepeats) {
+        double[] output = rolls;
+        for (int index = 0; index < rolls.length; index++)
+            for (int retries = 0; retries < maxRepeats; retries++)
+                if (Expression.satisfiesConditions(output[index], conditions)) {
+                    output[index] = rollNumber();
+                } else break;
+        rolls = output;
+    }
+
+    /**
+     * Removes rolls that satisfy input conditions removed
+     * @param conditions Must be fed as (operator)(number) separated by commas. Valid operators are <, <=, >, >=, !=, and =
+     */
+    public void drop(String conditions) {
+        ArrayList<Double> output = new ArrayList<>();
+        for (double i : rolls)
+            if (!Expression.satisfiesConditions(i, conditions))
+                output.add(i);
+        rolls = output.stream().mapToDouble(d -> d).toArray();
+    }
+
+    /**
+     * Removes rolls that do not satisfy input conditions
+     * @param conditions Must be fed as (operator)(number) separated by commas. Valid operators are <, <=, >, >=, !=, and =
+     */
+    public void keep(String conditions) {
+        ArrayList<Double> output = new ArrayList<>();
+        for (double i : rolls)
+            if (Expression.satisfiesConditions(i, conditions))
+                output.add(i);
+        rolls = output.stream().mapToDouble(d -> d).toArray();
+    }
+
+    /**
+     * Rolls an extra die for every die that satisfies given condition list. Those rolls can continue to cascade
+     * @param conditions    Must be fed as (operator)(number) separated by commas. Valid operators are <, <=, >, >=, !=, and =
+     * @param maxExplosions Maximum number of explosion dice rolls
+     */
+    public void explode(String conditions, int maxExplosions) {
+        ArrayList<Double> output = new ArrayList<>();
+        for(double i : rolls){
+            output.add(i);
+        }
+
+        int explosionsRemaining = 0, explosionsCounter = 0;
+        for (double i : rolls)
+            if (Expression.satisfiesConditions(i, conditions))
+                explosionsRemaining++;
+
+        while (explosionsRemaining > 0 && explosionsCounter <= maxExplosions) {
+            explosionsCounter++;
+            output.add(rollNumber());
+            if (Expression.satisfiesConditions(output.getLast(), conditions))
+                continue;
+            explosionsRemaining--;
+        }
+        rolls = output.stream().mapToDouble(d -> d).toArray();
+    }
+
+    public void explode(int maxExplosions) {
+        explode("=" + maxRoll, maxExplosions);
+    }
+
+    public void imod(ArrayList<String> conditions, ArrayList<String> mathTokens){
+        ArrayList<String> math = new ArrayList<>();
+        for(String cond : conditions) {
+            if(!cond.equals("*")) {
+                math.clear(); // don't make my dummy mistake of setting the references equal
+                math.addAll(mathTokens);
+                int rollIndex = (int)Double.parseDouble(cond) - 1; // reminder that tokens will be in double format
+                math.addFirst("" + rolls[rollIndex]);
+                rolls[rollIndex] = new MathSolver(math).evaluate();
+            } else {
+                for(int i = 0; i < rolls.length; i++) {
+                    math.clear();
+                    math.addAll(mathTokens);
+                    math.addFirst("" + rolls[i]);
+                    rolls[i] = new MathSolver(math).evaluate();
+                }
+            }
+        }
+    }
+}

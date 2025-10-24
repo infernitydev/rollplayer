@@ -119,7 +119,7 @@ class DiceRoller extends Expression{
 
     /**
      * Evaluates a token list for dice rolling from left to right
-     * @return dev.infernity.rollplayer.rollplayerlib3.Rolls object containing result rolls
+     * @return Rolls object containing result rolls
      * @throws IllegalArgumentException Missing condition throws
      */
     public Rolls evaluateExpression() throws IllegalArgumentException {
@@ -404,7 +404,7 @@ class Rolls{
     }
 
     /**
-     * dev.infernity.rollplayer.rollplayerlib3.Rolls an extra die for every die that satisfies given condition list. Those rolls can continue to cascade
+     * Rolls an extra die for every die that satisfies given condition list. Those rolls can continue to cascade
      * @param conditions    Must be fed as (operator)(number) separated by commas. Valid operators are <, <=, >, >=, !=, and =
      * @param maxExplosions Maximum number of explosion dice rolls
      */

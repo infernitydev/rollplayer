@@ -32,9 +32,21 @@ public class Roll extends SimpleCommandListener {
     @Override
     public void onCommandRan(@NotNull SlashCommandInteractionEvent event) {
         String input = Objects.requireNonNull(event.getOption("options")).getAsString();
-        ArrayList<String> evaluations = Parser.evaluate(input);
-        ArrayList<String> expressions = Parser.removeWhitespace(input);
+        ArrayList<String> evaluations;
+        ArrayList<String> expressions;
         List<ContainerChildComponent> output = new ArrayList<>();
+
+        try {
+            evaluations = Parser.evaluate(input);
+            expressions = Parser.removeWhitespace(input);
+        } catch (IllegalArgumentException e) {
+            event.replyComponents(createContainer(
+                TextDisplay.of("**Rollplayer has run into an issue:**"),
+                TextDisplay.ofFormat("%s", e.toString()),
+                TextDisplay.of("\n-# If this issue is unexpected, please contact the developers immediately")
+            )).useComponentsV2().queue();
+            return;
+        }
 
         output.add(TextDisplay.ofFormat("###--- %s ---", input));
         // add each expression-evaluation pair

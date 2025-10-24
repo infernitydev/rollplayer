@@ -11,7 +11,20 @@ public class Parser {
     public static ArrayList<String> evaluate(String input) throws IllegalArgumentException{
         ArrayList<ArrayList<String>> inputExpressions = new ArrayList<>();
         for(String exp : removeWhitespace(input)) {
-            inputExpressions.add(evaluateDice(stringTokenizer(exp)));
+            ArrayList<String> tester;
+            try {
+                tester = stringTokenizer(exp);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException(String.format("Exception with expression %s caught\n%s", exp, e));
+            }
+
+            try {
+                tester = evaluateDice(tester);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException(String.format("Exception with diceroll caught in expression %s \n%s", exp, e));
+            }
+
+            inputExpressions.add(tester);
         }
 
         ArrayList<String> output = new ArrayList<>();
@@ -26,7 +39,13 @@ public class Parser {
                 output.add(rolls.toString());
             }
             //if the input expression had math in it
-            else output.add("" + new MathSolver(expression).evaluate());
+            else try {
+                output.add("" + new MathSolver(expression).evaluate());
+            } catch (IllegalArgumentException e) {
+                StringBuilder reconstructor = new StringBuilder();
+                for(String s : expression) reconstructor.append(s);
+                throw new IllegalArgumentException(String.format("Exception caught while evaluating math expression %s\n%s", reconstructor, e));
+            }
         }
 
         return output;

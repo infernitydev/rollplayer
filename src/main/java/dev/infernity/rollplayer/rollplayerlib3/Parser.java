@@ -362,6 +362,7 @@ public class Parser {
             firstPass = false;
             toEvaluate.clear();
 
+            if(output.size() > 99) throw new IllegalArgumentException("Rollplayer will not parse more than 100 expressions");
         }
 
         // one last pass to catch any math after the last dice roll expression

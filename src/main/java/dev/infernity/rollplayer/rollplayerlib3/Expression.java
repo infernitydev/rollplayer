@@ -255,7 +255,8 @@ class Rolls{
         this(rolls, 1, die);
     }
 
-    Rolls(int rollCount, int min, int max) {
+    Rolls(int rollCount, int min, int max) throws IllegalArgumentException{
+        if(rollCount > 100) throw new IllegalArgumentException("Rollplayer will not roll more than 100 dice at once");
         this(new double[rollCount], min, max);
         for (int i = 0; i < rollCount; i++) {
             rolls[i] = rollNumber();
@@ -263,10 +264,7 @@ class Rolls{
     }
 
     Rolls(int rollCount, int die) {
-        this(new double[rollCount], 1, die);
-        for (int i = 0; i < rollCount; i++) {
-            rolls[i] = rollNumber();
-        }
+        this(rollCount, 1, die);
     }
 
     public double rollNumber() {

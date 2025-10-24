@@ -210,6 +210,7 @@ class DiceRoller extends Expression{
                 case "i":
                     ArrayList<String> conditions = new ArrayList<>();
                     ArrayList<String> mathTokens = new ArrayList<>();
+                    if(!isNumber(peek()) && !peek("\\*")) throw new IllegalArgumentException("No condition found following I-mod operator");
                     conditions.add(consume());
                     while(peek(",")) {
                         consume();
@@ -217,8 +218,10 @@ class DiceRoller extends Expression{
                             conditions.add(consume());
                         } else throw new IllegalArgumentException("Unrecognized condition in imod: " + peek());
                     }
+                    if(!peek(":")) throw new IllegalArgumentException("No : found to declare math following I-mod conditions");
                     while(peek(":")) {
                         consume();
+                        if(peek("EOF")) throw new IllegalArgumentException("Empty math section following I-mod : declaration");
                         mathTokens.clear();
                         boolean endMath = false;
                         String[] expressionEnds = {"d", "kh", "kl", "rr", "drop", "!", "i", ":", "EOF"};
@@ -288,7 +291,8 @@ class Rolls{
         return output;
     }
 
-    public void keepHigher(int high) {
+    public void keepHigher(int high) throws IllegalArgumentException{
+        if(high > rolls.length || high < 1) throw new IllegalArgumentException(String.format("Cannot keep %d rolls of %d", high, rolls.length));
         ArrayList<Double> sortedRolls = new ArrayList<>();
         for (double d : rolls) sortedRolls.add(d);
         sortedRolls.sort(null);
@@ -307,7 +311,8 @@ class Rolls{
         rolls = output.stream().mapToDouble(d -> d).toArray();
     }
 
-    public void keepLower(int low) {
+    public void keepLower(int low) throws IllegalArgumentException{
+        if(low > rolls.length || low < 1) throw new IllegalArgumentException(String.format("Cannot keep %d rolls of %d", low, rolls.length));
         ArrayList<Double> sortedRolls = new ArrayList<>();
         for (double d : rolls) sortedRolls.add(d);
         sortedRolls.sort(null);
@@ -326,7 +331,8 @@ class Rolls{
         rolls = output.stream().mapToDouble(d -> d).toArray();
     }
 
-    public void keepHighLow(int high, int low) {
+    public void keepHighLow(int high, int low) throws IllegalArgumentException{
+        if (high+low > rolls.length || high < -1 || low < -1) throw new IllegalArgumentException(String.format("Cannot keep %d higher and %d lower rolls of %d", high, low, rolls.length));
         ArrayList<Double> sortedRolls = new ArrayList<>();
         for (double d : rolls) sortedRolls.add(d);
         sortedRolls.sort(null);
@@ -431,13 +437,14 @@ class Rolls{
         explode("=" + maxRoll, maxExplosions);
     }
 
-    public void imod(ArrayList<String> conditions, ArrayList<String> mathTokens){
+    public void imod(ArrayList<String> conditions, ArrayList<String> mathTokens) throws IllegalArgumentException{
         ArrayList<String> math = new ArrayList<>();
         for(String cond : conditions) {
             if(!cond.equals("*")) {
                 math.clear(); // don't make my dummy mistake of setting the references equal
                 math.addAll(mathTokens);
                 int rollIndex = (int)Double.parseDouble(cond) - 1; // reminder that tokens will be in double format
+                if (rollIndex >= rolls.length || rollIndex < 0) throw new IllegalArgumentException(String.format("I-mod index out of bounds: %d of %d", rollIndex+1, rolls.length));
                 math.addFirst("" + rolls[rollIndex]);
                 rolls[rollIndex] = new MathSolver(math).evaluate();
             } else {

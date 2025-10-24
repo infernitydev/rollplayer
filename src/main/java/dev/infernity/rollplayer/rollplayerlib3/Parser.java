@@ -10,6 +10,11 @@ public class Parser {
      */
     public static ArrayList<String> evaluate(String input) throws IllegalArgumentException{
         ArrayList<ArrayList<String>> inputExpressions = new ArrayList<>();
+        try {
+            removeWhitespace(input);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(String.format("Whitespace removal step failed\n%s", e));
+        }
         for(String exp : removeWhitespace(input)) {
             ArrayList<String> tester;
             try {
@@ -56,9 +61,13 @@ public class Parser {
      * @param input Raw command string input
      * @return ArrayList of strings without whitespace
      */
-    public static ArrayList<String> removeWhitespace (String input) {
+    public static ArrayList<String> removeWhitespace (String input) throws IllegalArgumentException {
         ArrayList<String> output = new ArrayList<>();
         int unparsedIndex;
+
+        if (input.isBlank()) throw new IllegalArgumentException("removeWhitespace has been passed a blank string");
+        if (input.startsWith(" "))
+            input = input.substring(1);
 
         // dummy return
         if(input.contains(" ")) {
@@ -74,9 +83,6 @@ public class Parser {
             while (input.contains(" ")) {
                 unparsedIndex = input.indexOf(" ");
                 String before = "other", after = "other";  //other, roll, int, parenthesis ) (
-
-                if (unparsedIndex == 0 || unparsedIndex == input.length() - 1)
-                    continue;
                 // check the char before
                 if (input.substring(unparsedIndex - 1, unparsedIndex).matches("\\d")) {
                     // ints section
@@ -278,9 +284,13 @@ public class Parser {
             expressionEnd = input.subList(expressionStart, input.size()).indexOf("d") + expressionStart;
 
             //load pre-dice tokens into output
-            if (input.get(expressionEnd).equals("d") && input.get(expressionEnd - 1).matches("\\d+.\\d+"))
-                expressionEnd--;
-            output.addAll(input.subList(expressionStart, expressionEnd));
+            if (expressionEnd > 0) // avoids a dummy error
+                if (input.get(expressionEnd).equals("d") && input.get(expressionEnd - 1).matches("\\d+.\\d+"))
+                    expressionEnd--;
+            if (expressionEnd > 0) {
+                output.addAll(input.subList(expressionStart, expressionEnd));
+                firstPass = false;
+            }
 
             //load dice tokens into toEvaluate
             boolean validToken = true;
@@ -315,6 +325,7 @@ public class Parser {
                     case "rr":
                         while (!input.get(expressionEnd).equals("}")) {
                             toEvaluate.add(input.get(expressionEnd));
+                            if (input.get(expressionEnd).equals("EOF")) throw new IllegalArgumentException("Reached end of expression while parsing open reroll condition");
                             expressionEnd++;
                         }
                         toEvaluate.add(input.get(expressionEnd));
@@ -327,6 +338,7 @@ public class Parser {
                     case "drop":
                         while (!input.get(expressionEnd).equals("}")) {
                             toEvaluate.add(input.get(expressionEnd));
+                            if (input.get(expressionEnd).equals("EOF")) throw new IllegalArgumentException("Reached end of expression while parsing open drop condition");
                             expressionEnd++;
                         }
                         toEvaluate.add(input.get(expressionEnd));
@@ -336,6 +348,7 @@ public class Parser {
                         if (input.get(expressionEnd+1).equals("{")) {
                             while (!input.get(expressionEnd).equals("}")) {
                                 toEvaluate.add(input.get(expressionEnd));
+                                if (input.get(expressionEnd).equals("EOF")) throw new IllegalArgumentException("Reached end of expression while parsing open explode condition");
                                 expressionEnd++;
                             }
                         }

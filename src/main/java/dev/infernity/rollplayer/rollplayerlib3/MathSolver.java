@@ -1,8 +1,36 @@
+package dev.infernity.rollplayer.rollplayerlib3;
+
 import java.util.ArrayList;
+import java.util.function.DoubleBinaryOperator;
+
+interface Node{
+    enum BinaryOp implements DoubleBinaryOperator {
+        PLUS     ("+", Double::sum),
+        MINUS    ("-", (l, r) -> l - r),
+        TIMES    ("*", (l, r) -> l * r),
+        DIVIDE   ("/", (l, r) -> l / r),
+        EXPONENT ("^", Math::pow);
+
+        private final String symbol;
+        private final DoubleBinaryOperator operation;
+
+        BinaryOp (final String symbol, final DoubleBinaryOperator operation) {
+            this.symbol = symbol;
+            this.operation = operation;
+        }
+        public String getSymbol() { return symbol; }
+
+        @Override
+        public double applyAsDouble(final double left, final double right) {
+            return operation.applyAsDouble(left, right);
+        }
+    }
+    double evaluate();
+}
 
 public class MathSolver extends Expression {
     Node rootNode;
-    
+
     public MathSolver(ArrayList<String> tokens) throws IllegalArgumentException{
         super(tokens);
         rootNode = parseAdd(); // despite the confusing name this generates the entire tree
@@ -20,8 +48,8 @@ public class MathSolver extends Expression {
     // Add > Mult (+- Mult)*
     private Node parseAdd() throws IllegalArgumentException{
         Node e = parseMult();
-        while (peek("+") || peek("-")) {
-            if(peek("+")) {
+        while (peek(Node.BinaryOp.PLUS.getSymbol()) || peek(Node.BinaryOp.MINUS.getSymbol())) {
+            if(peek(Node.BinaryOp.PLUS.getSymbol())) {
                 consume();
                 e = new Binary(Node.BinaryOp.PLUS, e, parseMult());
             } else {
@@ -35,8 +63,8 @@ public class MathSolver extends Expression {
     // Mult > Pow (*/ Pow)*
     private Node parseMult() throws IllegalArgumentException{
         Node e = parsePow();
-        while (peek("*") || peek("/")) {
-            if(peek("*")) {
+        while (peek(Node.BinaryOp.TIMES.getSymbol()) || peek(Node.BinaryOp.DIVIDE.getSymbol())) {
+            if(peek(Node.BinaryOp.TIMES.getSymbol())) {
                 consume();
                 e = new Binary(Node.BinaryOp.TIMES, e, parsePow());
             } else {
@@ -50,7 +78,7 @@ public class MathSolver extends Expression {
     // Pow > Num (^ Num)*
     private Node parsePow() throws IllegalArgumentException{
         Node e = parseNum();
-        while (peek("^")) {
+        while (peek(Node.BinaryOp.EXPONENT.getSymbol())) {
             consume();
             e = new Binary(Node.BinaryOp.EXPONENT, e, parseNum());
         }
@@ -74,20 +102,9 @@ public class MathSolver extends Expression {
     }
 }
 
-interface Node{
-    enum BinaryOp { PLUS, MINUS, TIMES, DIVIDE, EXPONENT}
-    double evaluate();
-}
-
 record Binary(BinaryOp operator, Node left, Node right) implements Node {
     public double evaluate() {
-        return switch (operator) {
-            case PLUS -> left.evaluate() + right.evaluate();
-            case MINUS -> left.evaluate() - right.evaluate();
-            case TIMES -> left.evaluate() * right.evaluate();
-            case DIVIDE -> left.evaluate() / right.evaluate();
-            case EXPONENT -> Math.pow(left.evaluate(), right.evaluate());
-        };
+        return operator.applyAsDouble(left.evaluate(), right.evaluate());
     }
 }
 

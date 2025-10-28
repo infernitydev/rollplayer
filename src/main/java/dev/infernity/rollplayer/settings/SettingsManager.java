@@ -30,6 +30,10 @@ public class SettingsManager {
             userSettings = gson.fromJson(reader, type);
             if (userSettings == null) {
                 userSettings = new ConcurrentHashMap<>();
+            } else {
+                for (UserSettings settings : userSettings.values()) {
+                    settings.performMigration();
+                }
             }
         } catch (IOException e) {
             // File probably doesn't exist yet, which is fine.

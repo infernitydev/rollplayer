@@ -48,7 +48,7 @@ public class Roll extends SimpleCommandListener {
             return;
         }
 
-        output.add(TextDisplay.ofFormat("###--- %s ---", input));
+        output.add(TextDisplay.ofFormat("### --- %s ---", input));
         // add each expression-evaluation pair
         for (int exp = 0; exp < evaluations.size(); exp++) {
             output.add(TextDisplay.ofFormat("**%s**", expressions.get(exp)));

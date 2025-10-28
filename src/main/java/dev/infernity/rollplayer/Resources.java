@@ -1,7 +1,7 @@
 package dev.infernity.rollplayer;
 
-import dev.infernity.rollplayer.database.UserSettingManager;
 import dev.infernity.rollplayer.files.JarPather;
+import dev.infernity.rollplayer.settings.SettingsManager;
 import org.apache.commons.configuration2.FileBasedConfiguration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
@@ -20,16 +20,14 @@ public enum Resources {
     INSTANCE;
 
     private final Logger logger;
-    private final UserSettingManager userSettingManager;
     private final FileBasedConfiguration config;
     private final String version;
     private final String name;
     private final String timestamp;
+    private final SettingsManager settingsManager;
 
     Resources() {
         this.logger = LoggerFactory.getLogger("Rollplayer");
-
-        this.userSettingManager = new UserSettingManager();
 
         var pather = new JarPather<Resources>();
         Parameters params = new Parameters();
@@ -58,6 +56,8 @@ public enum Resources {
         version = _version;
         name = _name;
         timestamp = _timestamp;
+
+        this.settingsManager = new SettingsManager();
     }
 
     private String initializeVersion(Properties properties) throws IOException {
@@ -84,12 +84,12 @@ public enum Resources {
         return (String) timestamp;
     }
 
-    public Logger getLogger() {
-        return logger;
+    public void saveSettings() {
+        settingsManager.saveSettings();
     }
 
-    public UserSettingManager getUserSettingManager() {
-        return userSettingManager;
+    public Logger getLogger() {
+        return logger;
     }
 
     public FileBasedConfiguration getConfig() {
@@ -106,5 +106,9 @@ public enum Resources {
 
     public String getTimestamp() {
         return timestamp;
+    }
+
+    public SettingsManager getSettingsManager() {
+        return settingsManager;
     }
 }

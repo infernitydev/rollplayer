@@ -51,10 +51,12 @@ public class Roll extends SimpleCommandListener {
             return;
         }
 
-        output.add(TextDisplay.ofFormat("###--- %s ---", input));
+        output.add(TextDisplay.ofFormat("### --- %s ---", input));
         // add each expression-evaluation pair
         for (int exp = 0; exp < evaluations.size(); exp++) {
-            output.add(TextDisplay.ofFormat("**%s**", expressions.get(exp)));
+            if (expressions.size() > 1) {
+                output.add(TextDisplay.ofFormat("**%s**", expressions.get(exp)));
+            }
 
             String[] values;
             if (evaluations.get(exp).startsWith("r")) { // roll list clause

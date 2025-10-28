@@ -1,11 +1,13 @@
 package dev.infernity.rollplayer.listeners;
 
+import dev.infernity.rollplayer.Resources;
 import dev.infernity.rollplayer.listeners.templates.SimpleCommandListener;
 import dev.infernity.rollplayer.rollplayerlib3.Parser;
 import net.dv8tion.jda.api.components.container.ContainerChildComponent;
 import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionContextType;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -13,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class Roll extends SimpleCommandListener {
     public Roll(){
@@ -25,13 +26,15 @@ public class Roll extends SimpleCommandListener {
         return List.of(
                 Commands.slash(commandName, commandDescription)
                         .setContexts(InteractionContextType.ALL)
-                        .addOption(OptionType.STRING, "roll", "Roll expressions, rules are explained in rollhelp", true)
+                        .addOption(OptionType.STRING, "roll", "Roll expressions, rules are explained in rollhelp", false)
         );
     }
 
     @Override
     public void onCommandRan(@NotNull SlashCommandInteractionEvent event) {
-        String input = Objects.requireNonNull(event.getOption("options")).getAsString();
+        String input = event.getOption("roll",
+                () -> Resources.INSTANCE.getSettingsManager().getSettings(event.getUser().getIdLong()).getDefaultRoll(),
+                OptionMapping::getAsString);
         ArrayList<String> evaluations;
         ArrayList<String> expressions;
         List<ContainerChildComponent> output = new ArrayList<>();

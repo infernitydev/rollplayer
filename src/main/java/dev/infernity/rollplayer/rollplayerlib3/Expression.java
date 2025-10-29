@@ -1,6 +1,7 @@
 package dev.infernity.rollplayer.rollplayerlib3;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
 
@@ -96,11 +97,17 @@ public class Expression {
 }
 
 class DiceRoller extends Expression{
+    private final String minmax;
 
-    public DiceRoller (ArrayList<String> tokens) {
+    public DiceRoller (ArrayList<String> tokens, String minmax) {
         super(tokens);
+        this.minmax = minmax;
         pointer++;
         tokenStream.addFirst("BOF");
+    }
+
+    public DiceRoller (ArrayList<String> tokens) {
+        this(tokens, "");
     }
 
     @Override
@@ -141,7 +148,7 @@ class DiceRoller extends Expression{
                 rollMin = rollMax;
                 rollMax = (int)Double.parseDouble(consume());
             }
-            rolls = new Rolls(rollCount, rollMin, rollMax);
+            rolls = new Rolls(rollCount, rollMin, rollMax, minmax);
         }
 
         // -2 in condition is needed to account for EOF tickers at the end
@@ -246,21 +253,23 @@ class Rolls{
     private double[] rolls;
     private final int minRoll;
     private final int maxRoll;
+    private final String minmax;
     private final static Random rng = new Random();
 
-    Rolls(double[] rolls, int min, int max) {
+    Rolls(double[] rolls, int min, int max, String minmax) {
         this.rolls = rolls;
         this.minRoll = min;
         this.maxRoll = max;
+        this.minmax = minmax;
     }
 
     Rolls(double[] rolls, int die) {
-        this(rolls, 1, die);
+        this(rolls, 1, die, "");
     }
 
     Rolls(int rollCount, int min, int max) throws IllegalArgumentException{
         if(rollCount > 100) throw new IllegalArgumentException("Rollplayer will not roll more than 100 dice at once");
-        this(new double[rollCount], min, max);
+        this(new double[rollCount], min, max, "");
         for (int i = 0; i < rollCount; i++) {
             rolls[i] = rollNumber();
         }
@@ -268,6 +277,17 @@ class Rolls{
 
     Rolls(int rollCount, int die) {
         this(rollCount, 1, die);
+    }
+
+    /** @param minmax Should only ever be given "min" or "max" */
+    Rolls(int rollCount, int min, int max, String minmax) throws IllegalArgumentException {
+        double[] rolls = new double[rollCount];
+        this(rolls, min, max, minmax);
+        if(minmax.equals("min"))
+            Arrays.fill(rolls, min);
+        else if(minmax.equals("max"))
+            Arrays.fill(rolls, max);
+        else throw new IllegalArgumentException("Improper minmax rolls call: " + minmax);
     }
 
     public double rollNumber() {
@@ -434,6 +454,12 @@ class Rolls{
     }
 
     public void explode(int maxExplosions) {
+        if (minmax.equals("max")) {
+            rolls = new double[rolls.length + maxExplosions];
+            return;
+        } else if (minmax.equals("min")) {
+            return;
+        }
         explode("=" + maxRoll, maxExplosions);
     }
 

@@ -148,7 +148,8 @@ class DiceRoller extends Expression{
                 rollMin = rollMax;
                 rollMax = (int)Double.parseDouble(consume());
             }
-            rolls = new Rolls(rollCount, rollMin, rollMax, minmax);
+            if (minmax.isEmpty()) rolls = new Rolls(rollCount, rollMin, rollMax);
+            else rolls = new Rolls(rollCount, rollMin, rollMax, minmax);
         }
 
         // -2 in condition is needed to account for EOF tickers at the end
@@ -283,11 +284,11 @@ class Rolls{
     Rolls(int rollCount, int min, int max, String minmax) throws IllegalArgumentException {
         double[] rolls = new double[rollCount];
         this(rolls, min, max, minmax);
-        if(minmax.equals("min"))
-            Arrays.fill(rolls, min);
-        else if(minmax.equals("max"))
-            Arrays.fill(rolls, max);
-        else throw new IllegalArgumentException("Improper minmax rolls call: " + minmax);
+        switch (minmax) {
+            case "min" -> Arrays.fill(rolls, min);
+            case "max" -> Arrays.fill(rolls, max);
+            default -> throw new IllegalArgumentException("Improper minmax rolls call: " + minmax);
+        }
     }
 
     public double rollNumber() {

@@ -57,6 +57,44 @@ public class Parser {
     }
 
     /**
+     * @param expression Whitespace-removed but untokenized expression
+     * @param minmax Should only be "min" or "max"
+     * @return Double sum value of expression result
+     */
+    public static double expressionMinMax(String expression, String minmax) throws IllegalArgumentException {
+        ArrayList<String> tokens = stringTokenizer(expression);
+        tokens = evaluateDice(tokens, minmax);
+
+        if(tokens.getFirst().equals("Dice Roll Expression")) {
+            double sum = 0;
+            for(String value : tokens.subList(1, tokens.size()-1))
+                sum += Double.parseDouble(value);
+            return sum;
+        } else {
+            return new MathSolver(tokens).evaluate();
+        }
+    }
+
+    /**
+     * @param expressions Whitespace-removed expressions
+     * @param minmax Should only be "min" or "max"
+     * @return Double sum of expression min/max results
+     */
+    public static double evaluateMinMax(ArrayList<String> expressions, String minmax) throws IllegalArgumentException {
+        ArrayList<String> toEvaluate = new ArrayList<>();
+        for(String exp : expressions) {
+            if(exp.contains("{")) continue; //skip everything with a condition
+            toEvaluate.add(exp);
+        }
+
+        double sum = 0;
+        for(String exp : toEvaluate)
+            sum += expressionMinMax(exp, minmax);
+
+        return sum;
+    }
+
+    /**
      * Removes whitespace from a string input and breaks it into multiple strings for use in stringTokenizer
      * @param input Raw command string input
      * @return ArrayList of strings without whitespace
@@ -268,7 +306,10 @@ public class Parser {
      * @return Token expression able to be passed into the math solver with all "d" dice rolls resolved
      * <br>If the expression only contained a dice roll expression and no math, it returns all of the rolls as tokens in a list headed by a "Dice Roll Expression" metatoken
      */
-    public static ArrayList<String> evaluateDice(ArrayList<String> input) throws IllegalArgumentException{
+    public static ArrayList<String> evaluateDice(ArrayList<String> input) throws IllegalArgumentException {
+        return evaluateDice(input, "");
+    }
+    public static ArrayList<String> evaluateDice(ArrayList<String> input, String minmax) throws IllegalArgumentException{
         //dummy return
         if(!input.contains("d")) return input;
 
@@ -378,7 +419,7 @@ public class Parser {
             }
 
             // evaluate roll
-            DiceRoller evaluator = new DiceRoller(toEvaluate);
+            DiceRoller evaluator = new DiceRoller(toEvaluate, minmax);
             Rolls evaluation = evaluator.evaluateExpression();
 
             // if the expression was just a dice roll with no math, return it in a special way and head it with a metatoken

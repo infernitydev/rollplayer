@@ -3,6 +3,7 @@ package dev.infernity.rollplayer.listeners;
 import dev.infernity.rollplayer.Resources;
 import dev.infernity.rollplayer.listeners.templates.SimpleCommandListener;
 import dev.infernity.rollplayer.rollplayerlib3.Parser;
+import net.dv8tion.jda.api.components.container.Container;
 import net.dv8tion.jda.api.components.container.ContainerChildComponent;
 import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -13,6 +14,7 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -90,6 +92,44 @@ public class Roll extends SimpleCommandListener {
             output.add(TextDisplay.ofFormat("%s", line.toString()));
         }
 
-        event.replyComponents(createContainer(output)).useComponentsV2().queue();
+        float minLerpHue = 0, maxLerpHue = 120f/360;
+        float minHue = 0, maxHue = 200f/360;
+        float brightness = 70f/100, saturation = 1;
+
+        Container outputContainer = createContainer(output);
+
+        boolean colorViable = false;
+        for(String exp : expressions)
+            if(exp.contains("{")) {
+                colorViable = true;
+                break;
+            }
+
+        if (colorViable) {
+            float hue;
+            double valueSum = 0;
+            double valueMax = Parser.evaluateMinMax(expressions, "max");
+            double valueMin = Parser.evaluateMinMax(expressions, "min");
+
+            for(String s : evaluations) {
+                if(s.startsWith("r")) {
+                    String[] doubles = s.substring(2).split(" ");
+                    for(String d : doubles)
+                        valueSum += Double.parseDouble(d);
+                } else valueSum += Double.parseDouble(s);
+            }
+
+            if (valueSum >= valueMax) hue = maxHue;
+            else if (valueSum <= valueMin) hue = minHue;
+            else {
+                //what's lerpma?
+                float lerp = (float) ((valueSum - valueMin) / (valueMax - valueMin));
+                hue = lerp * (maxLerpHue - minLerpHue) + minLerpHue;
+            }
+
+            outputContainer = outputContainer.withAccentColor(Color.getHSBColor(hue, saturation, brightness));
+        }
+
+        event.replyComponents(outputContainer).useComponentsV2().queue();
     }
 }

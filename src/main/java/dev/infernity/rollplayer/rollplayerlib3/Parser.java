@@ -135,13 +135,10 @@ public class Parser {
                             break;
 
                         switch (input.charAt(unparsedIndex - checker - 2)) {
-                            case 'd':
-                            case ':':
-                            case 'R':
+                            case 'd', ':', 'R':
                                 before = "roll";
                                 break;
-                            case 'l':
-                            case 'h':
+                            case 'l', 'h':
                                 if (input.charAt(unparsedIndex - checker - 3) == 'k')
                                     before = "roll";
                                 break;
@@ -154,12 +151,11 @@ public class Parser {
                     }
                 } else {
                     switch (input.charAt(unparsedIndex - 1)) {
-                        case 'l':
-                        case 'h':
+                        case 'l', 'h':
                             if (input.charAt(unparsedIndex - 2) == 'k')
                                 before = "roll";
                             break;
-                        case '}':
+                        case '!', '}':
                             before = "roll";
                             break;
                         case ')':
@@ -191,13 +187,9 @@ public class Parser {
 
                 // now determine how the space gets removed
                 switch (before) {
-                    case "roll":
-                    case "int":
-                    case "parenthesis":
+                    case "roll", "int", "parenthesis":
                         switch (after) {
-                            case "roll":
-                            case "int":
-                            case "parenthesis":
+                            case "roll", "int", "parenthesis":
                                 output.add(input.substring(0, unparsedIndex));
                                 input = input.substring(unparsedIndex + 1);
                                 break;

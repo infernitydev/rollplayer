@@ -87,8 +87,11 @@ public class MathSolver extends Expression {
 
     // Num > double | (Add)
     private Node parseNum() throws IllegalArgumentException{
-        if (isNumber(peek()))
-            return new Number(Double.parseDouble(consume()));
+        if (isNumber(peek())) {
+            Node e = new Number(Double.parseDouble(consume()));
+            if(isNumber(peek())) throw new IllegalArgumentException("MathSolver has been passed two successive number tokens\nThis is likely because the expression has a roll modifier which has been improperly followed by a number");
+            return e;
+        }
         else {
             try { consume("("); }
             catch (IllegalArgumentException e) {

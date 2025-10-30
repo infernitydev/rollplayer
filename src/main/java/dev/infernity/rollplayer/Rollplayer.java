@@ -10,6 +10,8 @@ import java.util.Objects;
 
 public class Rollplayer extends ListenerAdapter {
     public static void main(String[] args) {
+        Runtime.getRuntime().addShutdownHook(new Thread(Resources.INSTANCE::saveSettings));
+
         String token = Resources.INSTANCE.getConfig().getString("discord.token");
         JDABuilder.createDefault(token).addEventListeners(new Rollplayer()).build();
     }

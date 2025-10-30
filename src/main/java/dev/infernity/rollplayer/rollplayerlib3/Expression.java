@@ -455,10 +455,8 @@ class Rolls{
     }
 
     public void explode(int maxExplosions) {
-        if (minmax.equals("max")) {
-            rolls = new double[rolls.length + maxExplosions];
-            Arrays.fill(rolls, maxRoll);
-        } else if (!minmax.equals("min")) explode("=" + maxRoll, maxExplosions);
+        if (!minmax.equals("min") && !minmax.equals("max"))
+            explode("=" + maxRoll, maxExplosions);
     }
 
     public void imod(ArrayList<String> conditions, ArrayList<String> mathTokens) throws IllegalArgumentException{

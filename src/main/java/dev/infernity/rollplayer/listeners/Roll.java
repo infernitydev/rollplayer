@@ -93,7 +93,7 @@ public class Roll extends SimpleCommandListener {
             output.add(TextDisplay.ofFormat("%s", line.toString()));
         }
 
-        float minLerpHue = 0, maxLerpHue = 120f/360;
+        float minLerpHue = 0, maxLerpHue = 120f/360, overMaxLerpHue = 300f/360;
         float minHue = 0, maxHue = 200f/360;
         float brightness = 70f/100, saturation = 1;
 
@@ -120,7 +120,15 @@ public class Roll extends SimpleCommandListener {
                 } else valueSum += Double.parseDouble(s);
             }
 
-            if (valueSum >= valueMax) hue = maxHue;
+            if (valueSum >= valueMax) {
+                if (valueSum >= 2*valueMax) hue = overMaxLerpHue;
+                else {
+                    //overmax lerp
+                    // think of this as (valueSum - valueMax) / (2*valueMax - valueMax)
+                    float lerp = (float) ((valueSum - valueMax) / valueMax);
+                    hue = lerp * (overMaxLerpHue - maxLerpHue) + maxLerpHue;
+                }
+            }
             else if (valueSum <= valueMin) hue = minHue;
             else {
                 //what's lerpma?

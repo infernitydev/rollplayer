@@ -42,8 +42,9 @@ public class Roll extends SimpleCommandListener {
         List<ContainerChildComponent> output = new ArrayList<>();
 
         try {
-            evaluations = Parser.evaluate(input);
             expressions = Parser.removeWhitespace(input);
+            if (expressions.size() > 10) throw new IllegalArgumentException("Rollplayer cannot roll more than 5 expressions at once");
+            evaluations = Parser.evaluate(input);
         } catch (IllegalArgumentException e) {
             event.replyComponents(createContainer(
                 TextDisplay.of("**Rollplayer has run into an issue:**"),
@@ -98,10 +99,10 @@ public class Roll extends SimpleCommandListener {
 
         Container outputContainer = createContainer(output);
 
-        boolean colorViable = false;
+        boolean colorViable = true;
         for(String exp : expressions)
             if(exp.contains("{")) {
-                colorViable = true;
+                colorViable = false;
                 break;
             }
 

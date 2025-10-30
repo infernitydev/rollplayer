@@ -67,7 +67,7 @@ public class Parser {
 
         if(tokens.getFirst().equals("Dice Roll Expression")) {
             double sum = 0;
-            for(String value : tokens.subList(1, tokens.size()-1))
+            for(String value : tokens.subList(1, tokens.size()))
                 sum += Double.parseDouble(value);
             return sum;
         } else {
@@ -319,8 +319,10 @@ public class Parser {
         int expressionStart;
         int expressionEnd = 0;
         boolean firstPass = true;
+        int rollCounter = 0;
 
         while (input.subList(expressionEnd,input.size()).contains("d")) {
+            if (++rollCounter > 10) throw new IllegalArgumentException("Cannot roll more than 10 rolls in one expression");
             expressionStart = expressionEnd;
             expressionEnd = input.subList(expressionStart, input.size()).indexOf("d") + expressionStart;
 

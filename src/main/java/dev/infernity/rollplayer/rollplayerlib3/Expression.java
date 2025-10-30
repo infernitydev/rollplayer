@@ -152,8 +152,8 @@ class DiceRoller extends Expression{
             else rolls = new Rolls(rollCount, rollMin, rollMax, minmax);
         }
 
-        // -2 in condition is needed to account for EOF tickers at the end
-        while(pointer < tokenStream.size()-2) {
+        // -1 in condition is needed to account for EOF token at the end
+        while(pointer < tokenStream.size()-1) {
             switch(consume()) {
                 case "kh":
                     int keepHigher = 1;
@@ -455,13 +455,8 @@ class Rolls{
     }
 
     public void explode(int maxExplosions) {
-        if (minmax.equals("max")) {
-            rolls = new double[rolls.length + maxExplosions];
-            return;
-        } else if (minmax.equals("min")) {
-            return;
-        }
-        explode("=" + maxRoll, maxExplosions);
+        if (!minmax.equals("min") && !minmax.equals("max"))
+            explode("=" + maxRoll, maxExplosions);
     }
 
     public void imod(ArrayList<String> conditions, ArrayList<String> mathTokens) throws IllegalArgumentException{

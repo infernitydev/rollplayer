@@ -25,14 +25,18 @@ public class Rollplayer extends ListenerAdapter {
         Resources.getInstance().getLogger().info("Loading {} listeners.", listeners.listeners.size());
         api.addEventListener(listeners.listeners.toArray());
         var debugServer = Resources.getInstance().getConfig().getLong("debug.testingServer", 0L);
-        if (debugServer == 0L) {
-            api.updateCommands().addCommands(listeners.commands.toArray(new CommandData[0]))
-                    .onSuccess(_ -> Resources.getInstance().getLogger().info("Commands initialized globally."))
-                    .queue();
+        if (Resources.getInstance().getConfig().getBoolean("commands.update", true)) {
+            if (debugServer == 0L) {
+                api.updateCommands().addCommands(listeners.commands.toArray(new CommandData[0]))
+                        .onSuccess(_ -> Resources.getInstance().getLogger().info("Commands initialized globally."))
+                        .queue();
+            } else {
+                Objects.requireNonNull(api.getGuildById(debugServer)).updateCommands().addCommands(listeners.commands.toArray(new CommandData[0]))
+                        .onSuccess(_ -> Resources.getInstance().getLogger().info("Commands initialized to server {}.", debugServer))
+                        .queue();
+            }
         } else {
-            Objects.requireNonNull(api.getGuildById(debugServer)).updateCommands().addCommands(listeners.commands.toArray(new CommandData[0]))
-                    .onSuccess(_ -> Resources.getInstance().getLogger().info("Commands initialized to server {}.", debugServer))
-                    .queue();
+            Resources.getInstance().getLogger().info("Not updating commands.");
         }
         super.onReady(event);
         Resources.getInstance().getLogger().info("Readied up!");

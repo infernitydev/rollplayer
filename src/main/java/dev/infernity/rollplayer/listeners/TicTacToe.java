@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.interactions.IntegrationType;
 import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -318,6 +319,8 @@ public class TicTacToe extends SimpleCommandListener {
                         .setContexts(InteractionContextType.ALL)
                         .addOption(OptionType.INTEGER, "width", "The width of the board (1-5, default 3)", false)
                         .addOption(OptionType.INTEGER, "victory_requirement", "The amount in a row required to win (defaults to board size)", false)
+                        .setIntegrationTypes(IntegrationType.ALL)
+                        .setContexts(InteractionContextType.ALL)
         );
     }
 

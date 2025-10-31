@@ -5,6 +5,7 @@ import dev.infernity.rollplayer.i18n.ListJoiner;
 import dev.infernity.rollplayer.listeners.templates.SimpleCommandListener;
 import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.IntegrationType;
 import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -43,6 +44,8 @@ public class Choose extends SimpleCommandListener {
                         .addOption(OptionType.STRING, "options", "A list of options, split by a semicolon (;)", true)
                         .addOption(OptionType.INTEGER, "count", "The amount of options to pick", false)
                         .addOption(OptionType.BOOLEAN, "unique", "Whether the options should be unique or not.", false)
+                        .setIntegrationTypes(IntegrationType.ALL)
+                        .setContexts(InteractionContextType.ALL)
         );
     }
 

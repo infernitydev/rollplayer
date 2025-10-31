@@ -4,6 +4,8 @@ import dev.infernity.rollplayer.Resources;
 import dev.infernity.rollplayer.listeners.templates.SimpleCommandListener;
 import dev.infernity.rollplayer.settings.UserSettings;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.IntegrationType;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -26,7 +28,9 @@ public class Settings extends SimpleCommandListener {
                         .addSubcommands(
                                 new SubcommandData("default-roll", "Get or set your default roll expression.")
                                         .addOption(OptionType.STRING, "expression", "The roll expression to set as your default.", false)
-                        )
+                                )
+                        .setIntegrationTypes(IntegrationType.ALL)
+                        .setContexts(InteractionContextType.ALL)
         );
     }
 

@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.components.container.Container;
 import net.dv8tion.jda.api.components.container.ContainerChildComponent;
 import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.IntegrationType;
 import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -29,6 +30,8 @@ public class Roll extends SimpleCommandListener {
                 Commands.slash(commandName, commandDescription)
                         .setContexts(InteractionContextType.ALL)
                         .addOption(OptionType.STRING, "roll", "Roll expressions, rules are explained in rollhelp", false)
+                        .setIntegrationTypes(IntegrationType.ALL)
+                        .setContexts(InteractionContextType.ALL)
         );
     }
 
@@ -74,7 +77,7 @@ public class Roll extends SimpleCommandListener {
             if (expressions.size() > 5) throw new IllegalArgumentException("Rollplayer cannot roll more than 5 expressions at once");
             evaluations = Parser.evaluate(input);
         } catch (Exception e) {
-            var errcode = Resources.getInstance().tryLogException(e, TextDisplay.ofFormat("Roll string: `%s`", input));
+            var errcode = Resources.getInstance().tryLogException(e, TextDisplay.ofFormat("Roll string: `%s`", input), TextDisplay.ofFormat("-# from `%s`", event.getUser().getName()));
             event.replyComponents(createContainer(
                     TextDisplay.of("**Rollplayer has run into an issue:**"),
                     TextDisplay.ofFormat("%s", e.toString()),

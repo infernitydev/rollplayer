@@ -3,6 +3,7 @@ package dev.infernity.rollplayer.listeners;
 import dev.infernity.rollplayer.listeners.templates.SimpleCommandListener;
 import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.IntegrationType;
 import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -45,6 +46,8 @@ public class EightBall extends SimpleCommandListener {
                 Commands.slash(commandName, commandDescription)
                         .setContexts(InteractionContextType.ALL)
                         .addOption(OptionType.STRING, "question", "question desc", false)
+                        .setIntegrationTypes(IntegrationType.ALL)
+                        .setContexts(InteractionContextType.ALL)
         );
     }
 

@@ -43,7 +43,7 @@ public class Roll extends SimpleCommandListener {
 
         try {
             expressions = Parser.removeWhitespace(input);
-            if (expressions.size() > 10) throw new IllegalArgumentException("Rollplayer cannot roll more than 5 expressions at once");
+            if (expressions.size() > 5) throw new IllegalArgumentException("Rollplayer cannot roll more than 5 expressions at once");
             evaluations = Parser.evaluate(input);
         } catch (IllegalArgumentException e) {
             event.replyComponents(createContainer(

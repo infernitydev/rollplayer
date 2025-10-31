@@ -314,7 +314,7 @@ public class Parser {
         int rollCounter = 0;
 
         while (input.subList(expressionEnd,input.size()).contains("d")) {
-            if (++rollCounter > 10) throw new IllegalArgumentException("Cannot roll more than 10 rolls in one expression");
+            if (++rollCounter > 5) throw new IllegalArgumentException("Cannot roll more than 10 rolls in one expression");
             expressionStart = expressionEnd;
             expressionEnd = input.subList(expressionStart, input.size()).indexOf("d") + expressionStart;
 

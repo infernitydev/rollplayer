@@ -117,6 +117,7 @@ class DiceRoller extends Expression{
     private String getConditions(){
         StringBuilder output = new StringBuilder();
         consume("\\{");
+        if (peek("}")) throw new IllegalArgumentException("Empty condition in diceroll found");
         while(!peek("\\}") && !peek("EOF")){
             output.append(consume());
         }

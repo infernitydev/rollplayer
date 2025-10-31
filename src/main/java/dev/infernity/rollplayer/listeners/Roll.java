@@ -86,7 +86,6 @@ public class Roll extends SimpleCommandListener {
             return;
         }
 
-        output.add(TextDisplay.ofFormat("### --- %s ---", input));
         // add each expression-evaluation pair
         for (int exp = 0; exp < evaluations.size(); exp++) {
             if (expressions.size() > 1) {
@@ -128,7 +127,7 @@ public class Roll extends SimpleCommandListener {
         float minLerpHue = 0, upToMaxLerpHue = 120f/360, atMaxLerpHue = 180f/360, overMaxLerpHue = 300f/360;
         float brightness = 70f/100, saturation = 1;
 
-        Container outputContainer = createContainer(output);
+        Container outputContainer = createContainer(TextDisplay.ofFormat("### %s /roll: %s", this.commandEmoji, input), output);
 
         boolean colorViable = true;
         for(String exp : expressions)

@@ -1,5 +1,6 @@
 package dev.infernity.rollplayer.listeners;
 
+import dev.infernity.rollplayer.Resources;
 import dev.infernity.rollplayer.components.templates.ErrorTemplate;
 import dev.infernity.rollplayer.listeners.templates.SimpleCommandListener;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
@@ -309,7 +310,7 @@ public class TicTacToe extends SimpleCommandListener {
     }
 
     public TicTacToe() {
-        super("tictactoe", "test desc", "<:tictactoe:1413009805051826176>");
+        super("tictactoe", "test desc", Resources.getInstance().getConfig().getString("emoji.tictactoe", "\uD80C\uDCD1"));
     }
 
     @Override

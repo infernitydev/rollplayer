@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class Info extends SimpleCommandListener {
     public Info() {
-        super("info", "info desc", "<:rollplayericon:1417614051290255412>");
+        super("info", "info desc", Resources.getInstance().getConfig().getString("emoji.icon", "\uD83D\uDCD6"));
     }
 
     public void onCommandRan(@NotNull SlashCommandInteractionEvent event) {

@@ -143,9 +143,7 @@ public class Resources {
 
     public void setJda(JDA jda) {
         this.jda = jda;
-        IO.println("set");
         this.debugChannel = jda.getTextChannelById(this.getConfig().getLong("debug.loggingChannel", 0L));
-        IO.println(debugChannel);
     }
 
     @SuppressWarnings("unused")

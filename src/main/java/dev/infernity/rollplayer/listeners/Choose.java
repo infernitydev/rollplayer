@@ -1,5 +1,6 @@
 package dev.infernity.rollplayer.listeners;
 
+import dev.infernity.rollplayer.Resources;
 import dev.infernity.rollplayer.components.templates.ErrorTemplate;
 import dev.infernity.rollplayer.i18n.ListJoiner;
 import dev.infernity.rollplayer.listeners.templates.SimpleCommandListener;
@@ -33,7 +34,7 @@ public class Choose extends SimpleCommandListener {
     }
 
     public Choose() {
-        super("choose", "Choose from a list of options.", "<:chooseWheel:1412921325474807878>");
+        super("choose", "Choose from a list of options.", Resources.getInstance().getConfig().getString("emoji.choose", "⨂"));
     }
 
     @Override

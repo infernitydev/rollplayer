@@ -122,7 +122,7 @@ public class Roll extends SimpleCommandListener {
             output.add(TextDisplay.ofFormat("%s", line.toString()));
         }
 
-        float minLerpHue = 0, upToMaxLerpHue = 120f/360, atMaxLerpHue = 120f/360, overMaxLerpHue = 300f/360;
+        float minLerpHue = 0, upToMaxLerpHue = 120f/360, atMaxLerpHue = 180f/360, overMaxLerpHue = 300f/360;
         float brightness = 70f/100, saturation = 1;
 
         Container outputContainer = createContainer(output);
@@ -151,11 +151,13 @@ public class Roll extends SimpleCommandListener {
             if (valueSum >= valueMax) {
                 if (valueSum >= 2*valueMax) {
                     hue = overMaxLerpHue;
+                    brightness = .85f;
                 } else {
                     // overmax lerp
                     // think of this as (valueSum - valueMax) / (2*valueMax - valueMax)
                     float lerp = (float) ((valueSum - valueMax) / valueMax);
                     hue = lerp * (overMaxLerpHue - atMaxLerpHue) + atMaxLerpHue;
+                    brightness = (lerp*.1f) + .75f;
                 }
             } else if (valueSum <= valueMin) {
                 brightness = 0;

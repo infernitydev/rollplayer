@@ -314,6 +314,7 @@ public class Parser {
         int rollCounter = 0;
 
         while (input.subList(expressionEnd,input.size()).contains("d")) {
+            if (input.get(input.size()-2).equals("d")) throw new IllegalArgumentException("Diceroll declaration without following instructions detected");
             if (++rollCounter > 5) throw new IllegalArgumentException("Cannot roll more than 10 rolls in one expression");
             expressionStart = expressionEnd;
             expressionEnd = input.subList(expressionStart, input.size()).indexOf("d") + expressionStart;

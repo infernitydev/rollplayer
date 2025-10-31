@@ -49,7 +49,9 @@ public class Expression {
             double conditionValue;
             switch(cond.charAt(0)) {
                 case '>':
+                    if(cond.length() < 2) throw new IllegalArgumentException("Condition < with no number is invalid");
                     if(cond.charAt(1) == '=') {
+                        if(cond.length() < 3) throw new IllegalArgumentException("Condition <= with no number is invalid");
                         conditionValue = Double.parseDouble(cond.substring(2));
                         if(testValue >= conditionValue) {
                             return true;
@@ -62,7 +64,9 @@ public class Expression {
                     }
 
                 case '<':
+                    if(cond.length() < 2) throw new IllegalArgumentException("Condition > with no number is invalid");
                     if(cond.charAt(1) == '=') {
+                        if(cond.length() < 3) throw new IllegalArgumentException("Condition >= with no number is invalid");
                         conditionValue = Double.parseDouble(cond.substring(2));
                         if(testValue <= conditionValue) {
                             return true;
@@ -75,13 +79,15 @@ public class Expression {
                     }
 
                 case '!':
-                    if(cond.charAt(1) != '=') throw new IllegalArgumentException("Illegal condition: !");
+                    if(cond.charAt(1) != '=') throw new IllegalArgumentException("Condition ! with no = is invalid");
+                    if(cond.length() < 3) throw new IllegalArgumentException("Condition != with no number is invalid");
                     conditionValue = Double.parseDouble(cond.substring(2));
                     if(testValue != conditionValue) {
                         return true;
                     } else continue;
 
                 case '=':
+                    if(cond.length() < 2) throw new IllegalArgumentException("Condition = with no number is invalid");
                     conditionValue = Double.parseDouble(cond.substring(1));
                     if(testValue == conditionValue) {
                         return true;

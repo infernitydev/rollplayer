@@ -433,7 +433,8 @@ class Rolls{
      * @param conditions    Must be fed as (operator)(number) separated by commas. Valid operators are <, <=, >, >=, !=, and =
      * @param maxExplosions Maximum number of explosion dice rolls
      */
-    public void explode(String conditions, int maxExplosions) {
+    public void explode(String conditions, int maxExplosions) throws IllegalArgumentException {
+        if (maxExplosions > 50) throw new IllegalArgumentException("Rollplayer cannot set maximum explosion cap above 50");
         ArrayList<Double> output = new ArrayList<>();
         for(double i : rolls){
             output.add(i);
@@ -444,7 +445,7 @@ class Rolls{
             if (Expression.satisfiesConditions(i, conditions))
                 explosionsRemaining++;
 
-        while (explosionsRemaining > 0 && explosionsCounter <= maxExplosions) {
+        while (explosionsRemaining > 0 && explosionsCounter < maxExplosions) {
             explosionsCounter++;
             output.add(rollNumber());
             if (Expression.satisfiesConditions(output.getLast(), conditions))

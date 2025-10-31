@@ -72,7 +72,7 @@ public class Resources {
         return INSTANCE;
     }
 
-    public static String generateRandomAlphanumericString(int length) {
+    private static String generateRandomAlphanumericString(int length) {
         var random = new Random();
         if (length < 0) {
             throw new IllegalArgumentException("Length cannot be negative.");

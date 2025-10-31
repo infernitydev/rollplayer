@@ -35,7 +35,7 @@ public class Roll extends SimpleCommandListener {
         );
     }
 
-    public static boolean isInteger(String str) {
+    private static boolean isInteger(String str) {
         if (str == null) {
             return false;
         }

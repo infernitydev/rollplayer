@@ -122,8 +122,7 @@ public class Roll extends SimpleCommandListener {
             output.add(TextDisplay.ofFormat("%s", line.toString()));
         }
 
-        float minLerpHue = 0, maxLerpHue = 120f/360, overMaxLerpHue = 300f/360;
-        float minHue = 0, maxHue = 200f/360;
+        float minLerpHue = 0, upToMaxLerpHue = 120f/360, atMaxLerpHue = 120f/360, overMaxLerpHue = 300f/360;
         float brightness = 70f/100, saturation = 1;
 
         Container outputContainer = createContainer(output);
@@ -150,19 +149,21 @@ public class Roll extends SimpleCommandListener {
             }
 
             if (valueSum >= valueMax) {
-                if (valueSum >= 2*valueMax) hue = overMaxLerpHue;
-                else {
-                    //overmax lerp
+                if (valueSum >= 2*valueMax) {
+                    hue = overMaxLerpHue;
+                } else {
+                    // overmax lerp
                     // think of this as (valueSum - valueMax) / (2*valueMax - valueMax)
                     float lerp = (float) ((valueSum - valueMax) / valueMax);
-                    hue = lerp * (overMaxLerpHue - maxLerpHue) + maxLerpHue;
+                    hue = lerp * (overMaxLerpHue - atMaxLerpHue) + atMaxLerpHue;
                 }
-            }
-            else if (valueSum <= valueMin) hue = minHue;
-            else {
+            } else if (valueSum <= valueMin) {
+                brightness = 0;
+                hue = 0;
+            } else {
                 //what's lerpma?
                 float lerp = (float) ((valueSum - valueMin) / (valueMax - valueMin));
-                hue = lerp * (maxLerpHue - minLerpHue) + minLerpHue;
+                hue = lerp * (upToMaxLerpHue - minLerpHue) + minLerpHue;
             }
 
             outputContainer = outputContainer.withAccentColor(Color.getHSBColor(hue, saturation, brightness));

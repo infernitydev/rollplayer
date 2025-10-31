@@ -18,7 +18,7 @@ import java.util.Objects;
 
 public class Settings extends SimpleCommandListener {
     public Settings() {
-        super("settings", "User-specific settings for Rollplayer.", "");
+        super("settings", "User-specific settings for Rollplayer.", "\uD83D\uDD27");
     }
 
     @Override
@@ -27,7 +27,7 @@ public class Settings extends SimpleCommandListener {
                 Commands.slash(commandName, commandDescription)
                         .addSubcommands(
                                 new SubcommandData("default-roll", "Get or set your default roll expression.")
-                                        .addOption(OptionType.STRING, "expression", "The roll expression to set as your default.", false)
+                                        .addOption(OptionType.STRING, "expression", "The roll expression to set as your default. Leave blank to get the value.", false)
                                 )
                         .setIntegrationTypes(IntegrationType.ALL)
                         .setContexts(InteractionContextType.ALL)

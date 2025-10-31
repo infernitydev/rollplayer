@@ -33,7 +33,7 @@ public class Choose extends SimpleCommandListener {
     }
 
     public Choose() {
-        super("choose", "choose desc", "<:chooseWheel:1412921325474807878>");
+        super("choose", "Choose from a list of options.", "<:chooseWheel:1412921325474807878>");
     }
 
     @Override

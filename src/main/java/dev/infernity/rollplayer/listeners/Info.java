@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class Info extends SimpleCommandListener {
     public Info() {
-        super("info", "info desc", Resources.getInstance().getConfig().getString("emoji.icon", "\uD83D\uDCD6"));
+        super("info", "Get some basic info about the bot.", Resources.getInstance().getConfig().getString("emoji.icon", "\uD83D\uDCD6"));
     }
 
     public void onCommandRan(@NotNull SlashCommandInteractionEvent event) {

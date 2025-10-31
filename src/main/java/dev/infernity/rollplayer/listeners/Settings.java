@@ -33,7 +33,7 @@ public class Settings extends SimpleCommandListener {
     @Override
     public void onCommandRan(@NotNull SlashCommandInteractionEvent event) {
         if (Objects.equals(event.getSubcommandName(), "default-roll")) {
-            UserSettings settings = Resources.INSTANCE.getSettingsManager().getSettings(event.getUser().getIdLong());
+            UserSettings settings = Resources.getInstance().getSettingsManager().getSettings(event.getUser().getIdLong());
             String expression = event.getOption("expression", null, OptionMapping::getAsString);
 
             if (expression == null) {

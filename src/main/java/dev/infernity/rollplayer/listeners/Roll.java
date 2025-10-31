@@ -32,11 +32,39 @@ public class Roll extends SimpleCommandListener {
         );
     }
 
+    public static boolean isInteger(String str) {
+        if (str == null) {
+            return false;
+        }
+        int length = str.length();
+        if (length == 0) {
+            return false;
+        }
+        int i = 0;
+        if (str.charAt(0) == '-') {
+            if (length == 1) {
+                return false;
+            }
+            i = 1;
+        }
+        for (; i < length; i++) {
+            char c = str.charAt(i);
+            if (c < '0' || c > '9') {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public void onCommandRan(@NotNull SlashCommandInteractionEvent event) {
         String input = event.getOption("roll",
-                () -> Resources.INSTANCE.getSettingsManager().getSettings(event.getUser().getIdLong()).getDefaultRoll(),
+                () -> Resources.getInstance().getSettingsManager().getSettings(event.getUser().getIdLong()).getDefaultRoll(),
                 OptionMapping::getAsString);
+
+        if (isInteger(input)){ // If people are doing "roll 20", they probably expect "roll d20"
+            input = "d" + input;
+        }
         ArrayList<String> evaluations;
         ArrayList<String> expressions;
         List<ContainerChildComponent> output = new ArrayList<>();
@@ -45,11 +73,12 @@ public class Roll extends SimpleCommandListener {
             expressions = Parser.removeWhitespace(input);
             if (expressions.size() > 5) throw new IllegalArgumentException("Rollplayer cannot roll more than 5 expressions at once");
             evaluations = Parser.evaluate(input);
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
+            var errcode = Resources.getInstance().tryLogException(e, TextDisplay.ofFormat("Roll string: `%s`", input));
             event.replyComponents(createContainer(
-                TextDisplay.of("**Rollplayer has run into an issue:**"),
-                TextDisplay.ofFormat("%s", e.toString()),
-                TextDisplay.of("\n-# If this issue is unexpected, please contact the developers immediately")
+                    TextDisplay.of("**Rollplayer has run into an issue:**"),
+                    TextDisplay.ofFormat("%s", e.toString()),
+                    TextDisplay.ofFormat("\n-# If this issue is unexpected, please contact the developers in [the support server](https://discord.gg/TT3vyT3tAD) and give them the following error code: %s", errcode)
             )).useComponentsV2().queue();
             return;
         }

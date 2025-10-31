@@ -14,7 +14,7 @@ public class Info extends SimpleCommandListener {
 
     public void onCommandRan(@NotNull SlashCommandInteractionEvent event) {
         event.replyComponents(createContainer(
-                TextDisplay.ofFormat("### %s %s built at %s", Resources.INSTANCE.getName(), Resources.INSTANCE.getVersion(), Resources.INSTANCE.getTimestamp()),
+                TextDisplay.ofFormat("### %s %s built at %s", Resources.getInstance().getName(), Resources.getInstance().getVersion(), Resources.getInstance().getTimestamp()),
                 TextDisplay.ofFormat("Java %d", Runtime.version().feature()),
                 TextDisplay.ofFormat("JDA %s", JDAInfo.VERSION)
         )).useComponentsV2().queue();

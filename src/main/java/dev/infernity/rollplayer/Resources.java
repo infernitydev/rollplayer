@@ -2,22 +2,28 @@ package dev.infernity.rollplayer;
 
 import dev.infernity.rollplayer.files.JarPather;
 import dev.infernity.rollplayer.settings.SettingsManager;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.components.container.Container;
+import net.dv8tion.jda.api.components.container.ContainerChildComponent;
+import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.apache.commons.configuration2.FileBasedConfiguration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 
-/// An immutable list of Singletons.
-public enum Resources {
-    INSTANCE;
+/// A singleton holding application resources.
+public class Resources {
+    private static final Resources INSTANCE = new Resources();
+    private static final String ALPHANUMERIC_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
 
     private final Logger logger;
     private final FileBasedConfiguration config;
@@ -25,8 +31,10 @@ public enum Resources {
     private final String name;
     private final String timestamp;
     private final SettingsManager settingsManager;
+    private JDA jda;
+    private TextChannel debugChannel;
 
-    Resources() {
+    private Resources() {
         this.logger = LoggerFactory.getLogger("Rollplayer");
 
         var pather = new JarPather<Resources>();
@@ -38,7 +46,7 @@ public enum Resources {
         try {
             this.config = builder.getConfiguration();
         } catch (ConfigurationException e) {
-            throw new ExceptionInInitializerError("The configuration file (rollplayer.properties) was not found.");
+            throw new RuntimeException("The configuration file (rollplayer.properties) was not found.", e);
         }
         String _version, _name, _timestamp;
         try (InputStream stream = getClass().getResourceAsStream("/application-details.properties")) {
@@ -58,6 +66,23 @@ public enum Resources {
         timestamp = _timestamp;
 
         this.settingsManager = new SettingsManager();
+    }
+
+    public static Resources getInstance() {
+        return INSTANCE;
+    }
+
+    public static String generateRandomAlphanumericString(int length) {
+        var random = new Random();
+        if (length < 0) {
+            throw new IllegalArgumentException("Length cannot be negative.");
+        }
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            int randomIndex = random.nextInt(ALPHANUMERIC_CHARS.length());
+            sb.append(ALPHANUMERIC_CHARS.charAt(randomIndex));
+        }
+        return sb.toString();
     }
 
     private String initializeVersion(Properties properties) throws IOException {
@@ -110,5 +135,61 @@ public enum Resources {
 
     public SettingsManager getSettingsManager() {
         return settingsManager;
+    }
+
+    public JDA getJda() {
+        return jda;
+    }
+
+    public void setJda(JDA jda) {
+        this.jda = jda;
+        IO.println("set");
+        this.debugChannel = jda.getTextChannelById(this.getConfig().getLong("debug.loggingChannel", 0L));
+        IO.println(debugChannel);
+    }
+
+    @SuppressWarnings("unused")
+    @Nullable
+    public TextChannel getDebugChannel() {
+        return debugChannel;
+    }
+
+    /// Logs an exception to the debug channel.
+    /// @param e The exception to log. May be null.
+    /// @param extras Any extra components to append.
+    /// @return An error code to show to the user.
+    public String tryLogException(Exception e, ContainerChildComponent... extras){
+        return tryLogException(e, Arrays.asList(extras));
+    }
+
+    /// Logs an exception to the debug channel.
+    /// @param e The exception to log. May be null.
+    /// @param extras Any extra components to append.
+    /// @return An error code to show to the user.
+    public String tryLogException(Exception e, Collection<ContainerChildComponent> extras){
+        String trace;
+        String name;
+        String errcode = generateRandomAlphanumericString(8);
+        if (Objects.nonNull(e)){
+            trace = Arrays.toString(e.getStackTrace());
+            trace = trace.substring(1, trace.length() - 1);
+            trace = trace.substring(0, Math.min(trace.length(), 2000));
+            if (trace.length() == 2000) {
+                trace += "...";
+            }
+            name = e.getClass().getName();
+        } else {
+            trace = "<no trace>";
+            name = "error";
+        }
+        ArrayList<ContainerChildComponent> els = new ArrayList<>();
+        els.add(TextDisplay.ofFormat("## A(n) %s occured!", name));
+        if (Objects.nonNull(extras)) {
+            els.addAll(extras);
+        }
+        els.add(TextDisplay.ofFormat("```\n%s```", trace));
+        els.add(TextDisplay.ofFormat("-# error code: %s", errcode));
+        debugChannel.sendMessageComponents(Container.of(els)).useComponentsV2().queue();
+        return errcode;
     }
 }

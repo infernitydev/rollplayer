@@ -135,7 +135,7 @@ public class Parser {
                             break;
 
                         switch (input.charAt(unparsedIndex - checker - 2)) {
-                            case 'd', ':', 'R':
+                            case 'd', ':', 'R', 'D':
                                 before = "roll";
                                 break;
                             case 'l', 'h':
@@ -173,14 +173,14 @@ public class Parser {
 
                     // keep going forwards until it hits a d to see if its a roll
                     while (checkerSub.matches("\\d") && unparsedIndex + 2 + checker < input.length()) {
-                        if (input.charAt(unparsedIndex + 2 + checker) == 'd') {
+                        if (input.charAt(unparsedIndex + 2 + checker) == 'd' || input.charAt(unparsedIndex + 2 + checker) == 'D') {
                             after = "roll";
                             break;
                         }
                         checker++;
                         checkerSub = input.substring(unparsedIndex + 1 + checker, unparsedIndex + 2 + checker);
                     }
-                } else if (input.charAt(unparsedIndex + 1) == 'd')
+                } else if (input.charAt(unparsedIndex + 1) == 'd' || input.charAt(unparsedIndex + 1) == 'D')
                     after = "roll";
                 else if (input.charAt(unparsedIndex + 1) == '(')
                     after = "parenthesis";
@@ -269,6 +269,10 @@ public class Parser {
             switch (substringIteration) {
                 case "(", ")", "+", "*", "-", "/", "^", "{", "}", "!", ":", ">", "<", "=", ",", "i":
                     outputList.add(substringIteration);
+                    stringIterator++;
+                    continue;
+                case "D":
+                    outputList.add("d");
                     stringIterator++;
                     continue;
             }

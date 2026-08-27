@@ -1,12 +1,12 @@
  package dev.infernity.rollplayer.listeners.commands;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
 import dev.infernity.rollplayer.components.templates.ErrorTemplate;
+import dev.infernity.rollplayer.listeners.interfaces.MinuteTicking;
 import dev.infernity.rollplayer.listeners.templates.SimpleCommandListener;
 import dev.infernity.rollplayer.util.RandomExt;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.dv8tion.jda.api.components.mediagallery.MediaGallery;
 import net.dv8tion.jda.api.components.mediagallery.MediaGalleryItem;
 import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
@@ -29,15 +29,28 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
-public class RandomCommand extends SimpleCommandListener {
-    private static class String2IntHashMap extends Object2IntOpenHashMap<String>{
+public class RandomCommand extends SimpleCommandListener implements MinuteTicking {
+    private record NameList(byte[] pool, int[] offsets, int[] weights) {}
 
+    private static final class CachedCountry {
+        final HashMap<String, HashMap<String, NameList>> names;
+        volatile long lastAccessTick;
+
+        CachedCountry(HashMap<String, HashMap<String, NameList>> names, long lastAccessTick) {
+            this.names = names;
+            this.lastAccessTick = lastAccessTick;
+        }
+    }
+
+    private static String nameAt(NameList list, int index) {
+        return new String(list.pool(), list.offsets()[index], list.offsets()[index + 1] - list.offsets()[index], StandardCharsets.UTF_8);
     }
 
     public RandomCommand() {
@@ -45,19 +58,79 @@ public class RandomCommand extends SimpleCommandListener {
         this.loadFiles();
     }
 
-    final File namesFile = new File("data/random/names.json");
+    final File namesDir = new File("data/random/names");
     final File usernamesFile = new File("data/random/usernames.txt");
-    final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    private HashMap<String, HashMap<String, HashMap<String, String2IntHashMap>>> names = new HashMap<>();
+    private List<String> countries = new ArrayList<>();
+    private final ConcurrentHashMap<String, CachedCountry> countryCache = new ConcurrentHashMap<>();
+    private static final long MAX_IDLE_TICKS = 360;
+    private volatile long currentTick = 0;
 
 
     public void loadFiles() {
-        try (FileReader reader = new FileReader(namesFile)) {
-            var type = new TypeToken<HashMap<String, HashMap<String, HashMap<String, String2IntHashMap>>>>(){};
-            names = gson.fromJson(reader, type);
+        File[] files = namesDir.listFiles((_, name) -> name.endsWith(".json"));
+        if (files == null) {
+            countries = new ArrayList<>();
+            return;
+        }
+        countries = new ArrayList<>(files.length);
+        for (File file : files) {
+            countries.add(file.getName().substring(0, file.getName().length() - 5));
+        }
+        countries.sort(String::compareTo);
+    }
+
+    private HashMap<String, HashMap<String, NameList>> getCountry(String country) {
+        long tick = currentTick;
+        CachedCountry cached = countryCache.computeIfAbsent(country, c -> {
+            HashMap<String, HashMap<String, NameList>> loaded = loadCountry(c);
+            return loaded == null ? null : new CachedCountry(loaded, tick);
+        });
+        if (cached == null) return null;
+        cached.lastAccessTick = tick;
+        return cached.names;
+    }
+
+    @Override
+    public void minuteTick(long tick) {
+        currentTick = tick;
+        long cutoff = tick - MAX_IDLE_TICKS;
+        countryCache.forEach((country, cached) -> {
+            if (cached.lastAccessTick < cutoff) {
+                countryCache.remove(country, cached);
+            }
+        });
+    }
+
+    private HashMap<String, HashMap<String, NameList>> loadCountry(String country) {
+        try (JsonReader reader = new JsonReader(new FileReader(new File(namesDir, country + ".json")))) {
+            HashMap<String, HashMap<String, NameList>> genders = new HashMap<>();
+            reader.beginObject();
+            while (reader.hasNext()) {
+                String gender = reader.nextName();
+                HashMap<String, NameList> forms = new HashMap<>();
+                reader.beginObject();
+                while (reader.hasNext()) {
+                    String form = reader.nextName();
+                    ByteArrayOutputStream pool = new ByteArrayOutputStream();
+                    IntList offsets = new IntArrayList();
+                    IntList weights = new IntArrayList();
+                    reader.beginObject();
+                    while (reader.hasNext()) {
+                        offsets.add(pool.size());
+                        pool.write(reader.nextName().getBytes(StandardCharsets.UTF_8));
+                        weights.add(reader.nextInt());
+                    }
+                    reader.endObject();
+                    offsets.add(pool.size());
+                    forms.put(form, new NameList(pool.toByteArray(), offsets.toIntArray(), weights.toIntArray()));
+                }
+                reader.endObject();
+                genders.put(gender, forms);
+            }
+            reader.endObject();
+            return genders;
         } catch (IOException e) {
-            // You forgot the file idot
-            names = new HashMap<>();
+            return null;
         }
     }
 
@@ -91,11 +164,9 @@ public class RandomCommand extends SimpleCommandListener {
     }
 
     public void onAutocomplete(@NotNull CommandAutoCompleteInteractionEvent event) {
-        String[] origins = new String[names.size()];
-        names.keySet().toArray(origins);
         if (Objects.equals(event.getSubcommandName(), "name")) {
             if (event.getFocusedOption().getName().equals("origin")) {
-                List<Command.Choice> options = Stream.of(origins)
+                List<Command.Choice> options = countries.stream()
                         .filter(word -> word.toLowerCase().startsWith(event.getFocusedOption().getValue().toLowerCase()))
                         .map(word -> new Command.Choice(word, word))
                         .collect(Collectors.toList());
@@ -148,44 +219,47 @@ public class RandomCommand extends SimpleCommandListener {
 
                event.replyComponents(container).useComponentsV2().queue();
            }
-           case "name" -> {
-               if (names.isEmpty()) {
-                   event.replyComponents(createContainer(
-                           TextDisplay.of("**Rollplayer has encountered a problem:**"),
-                           TextDisplay.of("names.json not found")
-                   )).useComponentsV2().queue();
-               }
-               String country = event.getOption("origin", "", OptionMapping::getAsString);
-               String gender = event.getOption("gender", "", OptionMapping::getAsString);
-               String form = event.getOption("form", "", OptionMapping::getAsString);
-               if (country.isEmpty()) {
-                   List<String> countries = new ArrayList<>(names.keySet());
-                   country = countries.get(random.nextInt(countries.size()));
-               }
-               var countryNames = names.get(country);
-               if (gender.isEmpty()) {
-                   List<String> genders = new ArrayList<>(countryNames.keySet());
-                   gender = genders.get(random.nextInt(genders.size()));
-               }
-               var genderNames = countryNames.get(gender);
-               var firstNames = genderNames.get("first").keySet().stream().toList();
-               var firstNameWeights = genderNames.get("first").values().intStream().boxed().toList();
-               var lastNames = genderNames.get("last").keySet().stream().toList();
-               var lastNameWeights = genderNames.get("last").values().intStream().boxed().toList();
-               List<String> names = new ArrayList<>();
-               for (int i = 0; i < count; i++) {
-                   String name = "";
-                   switch (form) {
-                       case "first" -> name = RandomExt.weighted_choice(firstNames, firstNameWeights);
-                       case "last" -> name = RandomExt.weighted_choice(lastNames, lastNameWeights);
-                       case "full" -> {
-                           String firstName = RandomExt.weighted_choice(firstNames, firstNameWeights);
-                           String lastName = RandomExt.weighted_choice(lastNames, lastNameWeights);
-                           name = firstName + " " + lastName;
-                       }
-                   }
-                   names.add(name);
-               }
+case "name" -> {
+                if (countries.isEmpty()) {
+                    event.replyComponents(createContainer(
+                            TextDisplay.of("**Rollplayer has encountered a problem:**"),
+                            TextDisplay.of("No name data found in data/random/names")
+                    )).useComponentsV2().queue();
+                    return;
+                }
+                String country = event.getOption("origin", "", OptionMapping::getAsString);
+                String gender = event.getOption("gender", "", OptionMapping::getAsString);
+                String form = event.getOption("form", "", OptionMapping::getAsString);
+                if (country.isEmpty()) {
+                    country = countries.get(random.nextInt(countries.size()));
+                }
+                var countryNames = getCountry(country);
+                if (countryNames == null) {
+                    event.replyComponents(createContainer(
+                            TextDisplay.of("**Rollplayer has encountered a problem:**"),
+                            TextDisplay.of("No name data found for " + StringUtils.capitalize(country))
+                    )).useComponentsV2().queue();
+                    return;
+                }
+                if (gender.isEmpty()) {
+                    List<String> genders = new ArrayList<>(countryNames.keySet());
+                    gender = genders.get(random.nextInt(genders.size()));
+                }
+var genderNames = countryNames.get(gender);
+                var firstNameList = genderNames.get("first");
+                var lastNameList = genderNames.get("last");
+                List<String> names = new ArrayList<>();
+                for (int i = 0; i < count; i++) {
+                    String name = "";
+                    int firstIdx = RandomExt.weighted_choice_index(firstNameList.weights().length, firstNameList.weights());
+                    int lastIdx = RandomExt.weighted_choice_index(lastNameList.weights().length, lastNameList.weights());
+                    switch (form) {
+                        case "first" -> name = nameAt(firstNameList, firstIdx);
+                        case "last" -> name = nameAt(lastNameList, lastIdx);
+                        case "full" -> name = nameAt(firstNameList, firstIdx) + " " + nameAt(lastNameList, lastIdx);
+                    }
+                    names.add(name);
+                }
                var container = createContainerSubcommand("name",
                        TextDisplay.of(String.join("\n", names)),
                        TextDisplay.of(String.format("-# %s name from %s", gender, StringUtils.capitalize(country)))

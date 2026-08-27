@@ -2,6 +2,7 @@ package dev.infernity.rollplayer.listeners.managers;
 
 import dev.infernity.rollplayer.components.PaginationComponent;
 import dev.infernity.rollplayer.components.templates.ErrorTemplate;
+import dev.infernity.rollplayer.listeners.interfaces.MinuteTicking;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -12,13 +13,13 @@ import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class PaginationManager implements EventListener {
-    private final Map<UUID, PaginationComponent> componentMap = new HashMap<>();
+public class PaginationManager implements EventListener, MinuteTicking {
+    private final Map<UUID, PaginationComponent> componentMap = new ConcurrentHashMap<>();
     private long lastCleanup = Instant.now().getEpochSecond();
     public <T extends IReplyCallback> void post(PaginationComponent pc, T interaction) {
         componentMap.put(pc.uuid, pc);
@@ -99,5 +100,12 @@ public class PaginationManager implements EventListener {
     private void stringSelectPageChange(StringSelectInteractionEvent event) {
         String[] id = event.getValues().getFirst().split(":");
         pageChange(event, event.getUser(), id, true);
+    }
+
+    @Override
+    public void minuteTick(long tick) {
+        if (tick % 10 == 0) {
+            mapCleanup();
+        }
     }
 }

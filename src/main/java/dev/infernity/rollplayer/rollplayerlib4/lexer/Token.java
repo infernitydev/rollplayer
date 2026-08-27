@@ -5,6 +5,9 @@ import dev.infernity.rollplayer.rollplayerlib4.SpanData;
 public sealed interface Token {
     SpanData range();
 
+    /// Oops
+    record Error(String message, SpanData range) implements Token {}
+
     /// `12.34`
     record Number(String value, SpanData range) implements Token {}
     /// `:` in `1:100`

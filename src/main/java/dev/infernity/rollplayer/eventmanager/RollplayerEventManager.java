@@ -49,20 +49,16 @@ public class RollplayerEventManager extends InterfacedEventManager {
                 List<ContainerChildComponent> components = new ArrayList<>();
                 if (event instanceof CommandInteraction ci) {
                     String type = switch (ci.getCommandType()){
-                        case UNKNOWN -> "Unknown";
-                        case SLASH -> "Slash";
+                        case UNKNOWN -> "Command";
+                        case SLASH -> "Slash command";
                         case USER -> "User action";
                         case MESSAGE -> "Message action";
                     };
-                    components.add(TextDisplay.ofFormat("%s command: `%s`", type, ci.getCommandString()));
+                    components.add(TextDisplay.ofFormat("%s: `%s`", type, ci.getCommandString()));
                     var err = Resources.getInstance().tryLogException(throwable, components);
-                    var msg = throwable.getMessage();
-                    if (msg == null) {
-                        msg = "Unfortunately, we do not know what the error is. We're working to fix this!";
-                    }
                     if (!ci.isAcknowledged()) {
-                        ci.replyComponents(ErrorTemplate.of("An unexpected error occurred in running this " + type.toLowerCase() + " command",
-                                msg + "\n\n-# If this issue is unexpected, please contact the developers in [the support server](https://discord.gg/TT3vyT3tAD) and give them the following error code: " + err)).useComponentsV2().setEphemeral(true).queue();
+                        ci.replyComponents(ErrorTemplate.of("An unexpected error occurred in running this " + type.toLowerCase(),
+                                 "\n\n-# If this issue is unexpected, please contact the developers in [the support server](https://discord.gg/TT3vyT3tAD) and give them the following error code: " + err)).useComponentsV2().setEphemeral(true).queue();
                     }
                 }
                 Resources.getInstance().getLogger().error("One of the EventListeners had an uncaught exception!", throwable);

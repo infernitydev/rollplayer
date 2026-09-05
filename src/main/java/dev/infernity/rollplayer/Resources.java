@@ -31,6 +31,7 @@ public class Resources {
     private final String version;
     private final String name;
     private final String timestamp;
+    private final String label;
     private final DatabaseManager databaseManager;
     private JDA jda;
     private TextChannel debugChannel;
@@ -51,7 +52,7 @@ public class Resources {
         } catch (ConfigurationException e) {
             throw new RuntimeException("The configuration file (rollplayer.properties) was not found.", e);
         }
-        String _version, _name, _timestamp;
+        String _version, _name, _timestamp, _label;
         try (InputStream stream = getClass().getResourceAsStream("/application-details.properties")) {
             Objects.requireNonNull(stream);
             Properties props = new Properties();
@@ -59,14 +60,17 @@ public class Resources {
             _version = initializeVersion(props);
             _name = initializeName(props);
             _timestamp = initializeTimestamp(props);
+            _label = initializeLabel(props);
         } catch (IOException | NullPointerException e) {
             _version = "(unknown version)";
             _name = "(unknown name)";
             _timestamp = "(unknown timestamp)";
+            _label = "The Patron Saint of Rolletteer Central";
         }
         version = _version;
         name = _name;
         timestamp = _timestamp;
+        label = _label;
 
         this.databaseManager = new DatabaseManager();
 
@@ -115,6 +119,14 @@ public class Resources {
         return (String) timestamp;
     }
 
+    private String initializeLabel(Properties properties) {
+        var label = properties.get("application.label");
+        if (label == null) {
+            return "The Patron Saint of Rolletteer Central";
+        }
+        return (String) label;
+    }
+
     public boolean isDebug() {
         return inDebugMode;
     }
@@ -133,6 +145,10 @@ public class Resources {
 
     public String getName() {
         return name;
+    }
+
+    public String getLabel() {
+        return label;
     }
 
     public String getTimestamp() {
@@ -187,8 +203,8 @@ public class Resources {
         if (Objects.nonNull(e)){
             trace = Arrays.toString(e.getStackTrace());
             trace = trace.substring(1, trace.length() - 1);
-            trace = trace.substring(0, Math.min(trace.length(), 2000));
-            if (trace.length() == 2000) {
+            trace = trace.substring(0, Math.min(trace.length(), 3000));
+            if (trace.length() == 3000) {
                 trace += "...";
             }
             msg = e.getMessage();

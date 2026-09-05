@@ -1,6 +1,7 @@
 package dev.infernity.rollplayer;
 
 import dev.infernity.rollplayer.eventmanager.RollplayerEventManager;
+import dev.infernity.rollplayer.ipc.InstanceIpc;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -15,11 +16,72 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Rollplayer extends ListenerAdapter {
-    static void main(String[] ignoredArgs) {
-        String token = Resources.getInstance().getConfig().getString("discord.token");
-        JDABuilder.createDefault(token).addEventListeners(new Rollplayer()).setEventManager(new RollplayerEventManager()).build();
+    private final AtomicBoolean takeoverSignalled = new AtomicBoolean();
+    private InstanceIpc instanceIpc;
+
+    public static void main(String[] ignoredArgs) {
+        var resources = Resources.getInstance();
+        int ipcPort = resources.getConfig().getInt("ipc.port", 18011);
+        var rollplayer = new Rollplayer();
+
+        try {
+            rollplayer.instanceIpc = InstanceIpc.acquire(ipcPort, rollplayer::closeForTakeover);
+        } catch (IOException | IllegalArgumentException e) {
+            resources.getLogger().error("Could not initialize instance IPC on port {}.", ipcPort, e);
+            return;
+        }
+        if (rollplayer.instanceIpc.isWaitingForTakeover()) {
+            resources.getLogger().info("Another instance is running; waiting until this instance is ready to take control.");
+        }
+
+        String token = resources.getConfig().getString("discord.token");
+        JDABuilder.createDefault(token)
+                .addEventListeners(rollplayer)
+                .setEventManager(new RollplayerEventManager())
+                .build();
+    }
+
+    private void closeForTakeover() {
+        Resources.getInstance().getLogger().info("A replacement instance is ready; handing over control.");
+        shutdownAndExit(0);
+    }
+
+    private void shutdownAfterFailedTakeover() {
+        Resources.getInstance().getLogger().error("The IPC handoff failed!! Exiting.");
+        shutdownAndExit(1);
+    }
+
+    private void shutdownAndExit(int exitCode) {
+        if (instanceIpc != null) {
+            instanceIpc.close();
+        }
+        var api = Resources.getInstance().getJda();
+        if (api != null) {
+            api.shutdown();
+            awaitShutdown(api);
+        }
+        System.exit(exitCode);
+    }
+
+    private void awaitShutdown(JDA api) {
+        boolean interrupted = false;
+        while (true) {
+            try {
+                api.awaitShutdown();
+                break;
+            } catch (InterruptedException e) {
+                // Finish the graceful shutdown before exiting, then preserve
+                // the interrupt status for the shutdown hook/process caller.
+                interrupted = true;
+            }
+        }
+        if (interrupted) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Override
@@ -91,7 +153,22 @@ public class Rollplayer extends ListenerAdapter {
         }
 
         super.onReady(event);
-        Resources.getInstance().getLogger().info("Readied up!");
+        Resources.getInstance().getLogger().info("### {}, {}, online. (version {}, built at {})",
+                Resources.getInstance().getName(),
+                Resources.getInstance().getLabel(),
+                Resources.getInstance().getVersion(),
+                Resources.getInstance().getTimestamp());
+
+        if (instanceIpc != null && instanceIpc.isWaitingForTakeover()
+                && takeoverSignalled.compareAndSet(false, true)) {
+            try {
+                instanceIpc.signalReadyAndTakeControl();
+                Resources.getInstance().getLogger().info("Took control from the previous instance.");
+            } catch (IOException e) {
+                Resources.getInstance().getLogger().error("Could not complete the IPC handoff.", e);
+                shutdownAfterFailedTakeover();
+            }
+        }
     }
 
     private void updateGlobalCommandsIncrementally(JDA api, List<CommandData> localCommands, List<Command> remoteCommands) {
